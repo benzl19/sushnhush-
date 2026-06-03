@@ -574,6 +574,7 @@
                 
                 if(chatIntervalId) clearInterval(chatIntervalId);
                 
+                // FIX LIZZY: Memusatkan semua panggilan notifikasi ke mesin utama, tanpa pop-up browser
                 if (typeof cekSemuaNotifikasi === "function") {
                     cekSemuaNotifikasi();
                     if(notifIntervalId) clearInterval(notifIntervalId);
@@ -641,6 +642,7 @@
                 alert(lang === 'ID' ? "Koneksi ke server gagal: " + err.message : "Failed to connect to server: " + err.message);
             }
         }
+// Blok 7
         async function simulasiLogin() {
             const loginVal = document.getElementById('loginUser').value.trim();
             const passVal = document.getElementById('loginPass').value; 
@@ -803,6 +805,7 @@
                 }
             }
         }
+// Blok 8
         async function prosesBuatGrup() {
             const groupName = document.getElementById('groupNameInput').value.trim(); 
             const groupPass = document.getElementById('groupPassInput').value;
