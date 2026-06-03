@@ -571,13 +571,18 @@
                 if (typeof renderHubList === "function") {
                     renderHubList();
                 }
-                cekPendingJoin();
+                
+                if (typeof cekPendingJoin === "function") {
+                    cekPendingJoin();
+                }
                 
                 if(chatIntervalId) clearInterval(chatIntervalId);
                 
-                cekPermintaanPertemanan();
-                if(notifIntervalId) clearInterval(notifIntervalId);
-                notifIntervalId = setInterval(cekPermintaanPertemanan, 10000);
+                if (typeof cekSemuaNotifikasi === "function") {
+                    cekSemuaNotifikasi();
+                    if(notifIntervalId) clearInterval(notifIntervalId);
+                    notifIntervalId = setInterval(cekSemuaNotifikasi, 10000);
+                }
             }, 500);
         }
 
@@ -1032,6 +1037,94 @@
                 hubList.innerHTML = html;
             } catch (err) {
                 hubList.innerHTML = `<div class="empty-state">System Error: ${err.message}</div>`;
+            }
+        }
+
+        function cekPendingJoin() {
+            const pendingStr = localStorage.getItem('sush_pendingJoin');
+            if (pendingStr) {
+                const pending = JSON.parse(pendingStr);
+                const lang = localStorage.getItem('sush_lang') || 'ID';
+                const msg = lang === 'ID' 
+                    ? `Anda memiliki undangan untuk masuk ke grup "${pending.name}". Kirim permintaan bergabung sekarang?` 
+                    : `You have an invitation to join "${pending.name}". Send join request now?`;
+                
+                if (confirm(msg)) {
+                    prosesKetukPintu('ya');
+                } else {
+                    prosesKetukPintu('tidak');
+                }
+            }
+        }
+
+        async function cekSemuaNotifikasi() {
+            const myEmail = localStorage.getItem('sush_curEmail');
+            if (!myEmail) return;
+            
+            try {
+                const urlGroups = SUPABASE_URL + '/rest/v1/groups?select=*';
+                const res = await fetch(urlGroups, { method: 'GET', headers: reqHeaders });
+                const allGroups = await res.json();
+                
+                const notifList = document.getElementById('notifList');
+                const notifDot = document.getElementById('notifDot');
+                let html = '';
+                let hasNotif = false;
+                const lang = localStorage.getItem('sush_lang') || 'ID';
+                
+                if (allGroups && allGroups.length > 0) {
+                    allGroups.forEach(g => {
+                        const isMember = g.members && g.members.some(m => m.email === myEmail);
+                        if (isMember && g.pending_votes && g.pending_votes.length > 0) {
+                            g.pending_votes.forEach(pv => {
+                                if (!pv.voted_by.includes(myEmail)) {
+                                    hasNotif = true;
+                                    const actionText = lang === 'ID' ? 'ingin bergabung ke' : 'wants to join';
+                                    const btnAccept = lang === 'ID' ? 'Setuju' : 'Accept';
+                                    const btnReject = lang === 'ID' ? 'Tolak' : 'Reject';
+                                    
+                                    html += `
+                                        <div class="notif-item" style="margin-bottom: 10px;">
+                                            <div class="notif-text"><b>${pv.alias}</b> ${actionText} <b>${g.name}</b>.</div>
+                                            <div class="notif-btns">
+                                                <button class="btn-notif-accept" onclick="prosesVote('${pv.email}', '${g.id}', true)">${btnAccept}</button>
+                                                <button class="btn-notif-reject" onclick="prosesVote('${pv.email}', '${g.id}', false)">${btnReject}</button>
+                                            </div>
+                                        </div>
+                                    `;
+                                }
+                            });
+                        }
+                    });
+                }
+                
+                if (typeof cekPermintaanPertemanan === "function") {
+                    const dmHtml = await cekPermintaanPertemanan(true);
+                    if (dmHtml) {
+                        html += dmHtml;
+                        hasNotif = true;
+                    }
+                }
+                
+                if (notifList) {
+                    if (html === '') {
+                        notifList.innerHTML = `<div class="empty-state">${lang === 'ID' ? 'Tidak ada notifikasi baru.' : 'No new notifications.'}</div>`;
+                    } else {
+                        notifList.innerHTML = html;
+                    }
+                }
+                
+                if (notifDot) {
+                    if (hasNotif) {
+                        notifDot.classList.add('show-node');
+                        notifDot.classList.remove('hide-node');
+                    } else {
+                        notifDot.classList.add('hide-node');
+                        notifDot.classList.remove('show-node');
+                    }
+                }
+            } catch (err) {
+                console.error('System Error: ' + err.message);
             }
         }
 // blok 9A
