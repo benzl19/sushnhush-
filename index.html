@@ -572,10 +572,6 @@
                     renderHubList();
                 }
                 
-                if (typeof cekPendingJoin === "function") {
-                    cekPendingJoin();
-                }
-                
                 if(chatIntervalId) clearInterval(chatIntervalId);
                 
                 if (typeof cekSemuaNotifikasi === "function") {
@@ -645,7 +641,6 @@
                 alert(lang === 'ID' ? "Koneksi ke server gagal: " + err.message : "Failed to connect to server: " + err.message);
             }
         }
-// Blok 7
         async function simulasiLogin() {
             const loginVal = document.getElementById('loginUser').value.trim();
             const passVal = document.getElementById('loginPass').value; 
@@ -748,7 +743,6 @@
                     const myEmail = localStorage.getItem('sush_curEmail');
                     const myAlias = localStorage.getItem('sush_curAlias');
 
-                    // --- CEK PERMINTAAN GANTUNG (PENDING) ---
                     const urlCekDup = SUPABASE_URL + '/rest/v1/groups?password=eq.dm_pending';
                     const resCekDup = await fetch(urlCekDup, { method: 'GET', headers: reqHeaders });
                     const allPending = await resCekDup.json();
@@ -762,7 +756,6 @@
                         return;
                     }
 
-                    // --- CEK YANG SUDAH JADI TEMAN (ACTIVE) ---
                     const urlCekActive = SUPABASE_URL + '/rest/v1/groups?password=eq.dm_active';
                     const resCekActive = await fetch(urlCekActive, { method: 'GET', headers: reqHeaders });
                     const allActive = await resCekActive.json();
@@ -800,52 +793,16 @@
             } else {
                 const cleanGroupId = searchVal.replace('#', '');
                 localStorage.setItem('sush_pendingJoin', JSON.stringify({ name: 'Grup Rahasia', id: cleanGroupId }));
-                cekPendingJoin();
+                
+                if (typeof cekSemuaNotifikasi === 'function') {
+                    cekSemuaNotifikasi();
+                }
+                
                 if (currentActiveMenu !== 'notif' && typeof toggleMenuPanel === 'function') {
                     toggleMenuPanel('notif');
                 }
             }
         }
-
-        function cekPendingJoin() {
-            const pendingStr = localStorage.getItem('sush_pendingJoin');
-            const myEmail = localStorage.getItem('sush_curEmail');
-            if(!pendingStr || !myEmail) return;
-
-            const pending = JSON.parse(pendingStr);
-            const lang = localStorage.getItem('sush_lang') || 'ID';
-            const badge = document.getElementById('titleBadge');
-            
-            if (badge) {
-                badge.className = "neon-dot dot-yellow";
-                badge.style.display = 'inline-block';
-            }
-
-            const listContainer = document.getElementById('notifList');
-            if (listContainer) {
-                let html = `
-                    <div class="notif-item">
-                        <div class="notif-text">
-                            ${lang === 'ID' ? `Apakah Anda ingin bergabung kedalam grup <strong>${pending.name}</strong>?` : `Do you want to join the group <strong>${pending.name}</strong>?`}
-                        </div>
-                        <div class="notif-bars">
-                            <div class="notif-btns">
-                                <button class="btn-notif-accept" onclick="prosesKetukPintu('ya')">${lang === 'ID' ? 'YA' : 'YES'}</button>
-                                <button class="btn-notif-reject" onclick="prosesKetukPintu('tidak')">${lang === 'ID' ? 'TIDAK' : 'NO'}</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                const currentHtml = listContainer.innerHTML;
-                if(currentHtml.includes('Tidak ada') || currentHtml.includes('No new')) {
-                    listContainer.innerHTML = html;
-                } else {
-                    listContainer.innerHTML = html + currentHtml;
-                }
-            }
-        }
-// Blok 8
         async function prosesBuatGrup() {
             const groupName = document.getElementById('groupNameInput').value.trim(); 
             const groupPass = document.getElementById('groupPassInput').value;
@@ -901,6 +858,7 @@
             if(keputusan === 'tidak') {
                 localStorage.removeItem('sush_pendingJoin');
                 alert(lang === 'ID' ? 'Akses dibatalkan.' : 'Access cancelled.');
+                cekSemuaNotifikasi();
                 return;
             }
             
@@ -927,6 +885,7 @@
                 
                 alert(lang === 'ID' ? 'Permintaan bergabung dikirim ke admin grup.' : 'Join request sent to group admins.');
                 localStorage.removeItem('sush_pendingJoin');
+                cekSemuaNotifikasi();
             } catch (err) {
                 alert('System Error: ' + err.message);
             }
@@ -1040,89 +999,124 @@
             }
         }
 
-        function cekPendingJoin() {
-            const pendingStr = localStorage.getItem('sush_pendingJoin');
-            if (pendingStr) {
-                const pending = JSON.parse(pendingStr);
-                const lang = localStorage.getItem('sush_lang') || 'ID';
-                const msg = lang === 'ID' 
-                    ? `Anda memiliki undangan untuk masuk ke grup "${pending.name}". Kirim permintaan bergabung sekarang?` 
-                    : `You have an invitation to join "${pending.name}". Send join request now?`;
-                
-                if (confirm(msg)) {
-                    prosesKetukPintu('ya');
-                } else {
-                    prosesKetukPintu('tidak');
-                }
-            }
-        }
-
         async function cekSemuaNotifikasi() {
             const myEmail = localStorage.getItem('sush_curEmail');
-            if (!myEmail) return;
+            const badge = document.getElementById('titleBadge');
+            const listContainer = document.getElementById('notifList');
+            const lang = localStorage.getItem('sush_lang') || 'ID';
+            
+            if(!myEmail) return;
+
+            let html = '';
+            let hasNotif = false;
+
+            const pendingStr = localStorage.getItem('sush_pendingJoin');
+            if (pendingStr) {
+                hasNotif = true;
+                const pending = JSON.parse(pendingStr);
+                const txt = lang === 'ID' 
+                    ? `Apakah Anda ingin bergabung ke grup <strong>${pending.name}</strong>?` 
+                    : `Do you want to join the group <strong>${pending.name}</strong>?`;
+                const btnY = lang === 'ID' ? 'YA' : 'YES';
+                const btnN = lang === 'ID' ? 'TIDAK' : 'NO';
+                
+                html += `
+                    <div class="notif-item" style="margin-bottom: 10px;">
+                        <div class="notif-text">${txt}</div>
+                        <div class="notif-bars">
+                            <div class="notif-btns">
+                                <button class="btn-notif-accept" onclick="prosesKetukPintu('ya')">${btnY}</button>
+                                <button class="btn-notif-reject" onclick="prosesKetukPintu('tidak')">${btnN}</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
             
             try {
                 const urlGroups = SUPABASE_URL + '/rest/v1/groups?select=*';
-                const res = await fetch(urlGroups, { method: 'GET', headers: reqHeaders });
-                const allGroups = await res.json();
-                
-                const notifList = document.getElementById('notifList');
-                const notifDot = document.getElementById('notifDot');
-                let html = '';
-                let hasNotif = false;
-                const lang = localStorage.getItem('sush_lang') || 'ID';
+                const resGroups = await fetch(urlGroups, { method: 'GET', headers: reqHeaders });
+                const allGroups = await resGroups.json();
                 
                 if (allGroups && allGroups.length > 0) {
+                    const dmRequests = allGroups.filter(g => 
+                        g.password === 'dm_pending' && 
+                        g.members && g.members.find(m => m.email === myEmail && m.creator === false)
+                    );
+
+                    dmRequests.forEach(req => {
+                        hasNotif = true;
+                        const pengirimData = req.members.find(m => m.creator === true);
+                        const namaPengirimClean = pengirimData ? pengirimData.alias.split('#')[0] : 'Unknown';
+                        const txt = lang === 'ID' ? `Permintaan pertemanan dari: <strong>${namaPengirimClean}</strong>` : `Friend request from: <strong>${namaPengirimClean}</strong>`;
+                        const btnAcc = lang === 'ID' ? 'TERIMA' : 'ACCEPT';
+                        const btnRej = lang === 'ID' ? 'TOLAK' : 'REJECT';
+
+                        html += `
+                            <div class="notif-item" style="margin-bottom: 10px;">
+                                <div class="notif-text">${txt}</div>
+                                <div class="notif-bars">
+                                    <div class="notif-btns">
+                                        <button class="btn-notif-accept" onclick="aksiPermintaan('${req.id}', 'terima')">${btnAcc}</button>
+                                        <button class="btn-notif-reject" onclick="aksiPermintaan('${req.id}', 'tolak')">${btnRej}</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+
                     allGroups.forEach(g => {
-                        const isMember = g.members && g.members.some(m => m.email === myEmail);
-                        if (isMember && g.pending_votes && g.pending_votes.length > 0) {
-                            g.pending_votes.forEach(pv => {
-                                if (!pv.voted_by.includes(myEmail)) {
-                                    hasNotif = true;
-                                    const actionText = lang === 'ID' ? 'ingin bergabung ke' : 'wants to join';
-                                    const btnAccept = lang === 'ID' ? 'Setuju' : 'Accept';
-                                    const btnReject = lang === 'ID' ? 'Tolak' : 'Reject';
-                                    
-                                    html += `
-                                        <div class="notif-item" style="margin-bottom: 10px;">
-                                            <div class="notif-text"><b>${pv.alias}</b> ${actionText} <b>${g.name}</b>.</div>
-                                            <div class="notif-btns">
-                                                <button class="btn-notif-accept" onclick="prosesVote('${pv.email}', '${g.id}', true)">${btnAccept}</button>
-                                                <button class="btn-notif-reject" onclick="prosesVote('${pv.email}', '${g.id}', false)">${btnReject}</button>
+                        if (g.password !== 'dm_pending' && g.password !== 'dm_active' && g.members && g.members.find(m => m.email === myEmail)) {
+                            if (g.pending_votes && g.pending_votes.length > 0) {
+                                g.pending_votes.forEach(pv => {
+                                    if (!pv.voted_by || !pv.voted_by.includes(myEmail)) {
+                                        hasNotif = true;
+                                        const namaCalonClean = pv.alias.split('#')[0];
+                                        const txt = lang === 'ID' ? `Izinkan <strong>${namaCalonClean}</strong> bergabung ke <strong>${g.name}</strong>?` : `Allow <strong>${namaCalonClean}</strong> to join <strong>${g.name}</strong>?`;
+                                        const btnAcc = lang === 'ID' ? 'TERIMA' : 'ACCEPT';
+                                        const btnRej = lang === 'ID' ? 'TOLAK' : 'REJECT';
+
+                                        html += `
+                                            <div class="notif-item" style="margin-bottom: 10px;">
+                                                <div class="notif-text">${txt}</div>
+                                                <div class="notif-bars">
+                                                    <div class="notif-btns">
+                                                        <button class="btn-notif-accept" onclick="prosesVote('${pv.email}', '${g.id}', true)">${btnAcc}</button>
+                                                        <button class="btn-notif-reject" onclick="prosesVote('${pv.email}', '${g.id}', false)">${btnRej}</button>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
-                                    `;
-                                }
-                            });
+                                        `;
+                                    }
+                                });
+                            }
                         }
                     });
                 }
                 
-                if (typeof cekPermintaanPertemanan === "function") {
-                    const dmHtml = await cekPermintaanPertemanan(true);
-                    if (dmHtml) {
-                        html += dmHtml;
-                        hasNotif = true;
-                    }
-                }
-                
-                if (notifList) {
+                if (listContainer) {
                     if (html === '') {
-                        notifList.innerHTML = `<div class="empty-state">${lang === 'ID' ? 'Tidak ada notifikasi baru.' : 'No new notifications.'}</div>`;
+                        listContainer.innerHTML = `<div class="empty-state">${lang === 'ID' ? 'Tidak ada notifikasi baru.' : 'No new notifications.'}</div>`;
                     } else {
-                        notifList.innerHTML = html;
+                        listContainer.innerHTML = html;
                     }
                 }
                 
-                if (notifDot) {
+                if (badge) {
                     if (hasNotif) {
-                        notifDot.classList.add('show-node');
-                        notifDot.classList.remove('hide-node');
+                        badge.className = "neon-dot dot-yellow";
+                        badge.style.display = 'inline-block';
                     } else {
-                        notifDot.classList.add('hide-node');
-                        notifDot.classList.remove('show-node');
+                        badge.style.display = 'none';
                     }
                 }
+
+                const dropdown = document.getElementById('universalDropdown');
+                if(dropdown && currentActiveMenu === 'notif') {
+                    const cBox = document.getElementById('universalDropdownContent');
+                    dropdown.style.maxHeight = (cBox.scrollHeight + 30) + 'px';
+                }
+                
             } catch (err) {
                 console.error('System Error: ' + err.message);
             }
