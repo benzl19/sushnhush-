@@ -1530,6 +1530,10 @@
                 const now = new Date().getTime();
                 const myEmail = localStorage.getItem('sush_curEmail');
                 
+                const filterTimeLimit = new Date(now - 24 * 60 * 60 * 1000).toISOString();
+                const urlPurge = SUPABASE_URL + '/rest/v1/messages?group_id=eq.' + encodeURIComponent(safeId) + '&created_at=lt.' + encodeURIComponent(filterTimeLimit);
+                fetch(urlPurge, { method: 'DELETE', headers: reqHeaders }).catch(err => console.error(err));
+                
                 msgsData.forEach(msg => {
                     const msgTime = new Date(msg.created_at).getTime();
                     const diffHours = (now - msgTime) / 3600000;
