@@ -506,6 +506,7 @@
             if (!inputUser) return;
             alert(lang === 'ID' ? `[PROSES PEMULIHAN 3 BLOK AKTIF] \n\nSistem menampilkan Pertanyaan Rahasia & Clue buatanmu sendiri. \n\n[Skenario Sukses]: Jika Jawaban cocok, link reset otomatis terkirim via Email Service Gratisan (Brevo/Resend)!` : `[3-BLOCK RECOVERY ACTIVE] \n\nSystem fetches your unique Secret Question & Clue. \n\n[Success Scenario]: If the Answer matches, a reset link will be sent via Free Email Service!`);
         }
+// Blok 6
         let chatIntervalId = null; 
 
         const anonNouns = [
@@ -531,17 +532,46 @@
             if(joinGrup && joinId) {
                 localStorage.setItem('sush_pendingJoin', JSON.stringify({ name: joinGrup, id: joinId }));
             }
-            
-            const regUserEl = document.getElementById('regUser');
-            if(regUserEl) {
-                regUserEl.addEventListener('input', cekPassword);
-            }
-            
-            const regEmailEl = document.getElementById('regEmail');
-            if(regEmailEl) {
-                regEmailEl.addEventListener('input', cekPassword);
-            }
+
+            document.addEventListener("visibilitychange", kendaliDetakJantungAplikasi);
+            window.addEventListener("focus", kendaliDetakJantungAplikasi);
+            window.addEventListener("blur", kendaliDetakJantungAplikasi);
         };
+
+        function kendaliDetakJantungAplikasi() {
+            if (!localStorage.getItem('sush_curEmail')) return;
+
+            const isLayarSembunyi = document.hidden;
+            const isKehilanganFokus = !document.hasFocus();
+
+            if (isLayarSembunyi || isKehilanganFokus) {
+                if (notifIntervalId) {
+                    clearInterval(notifIntervalId);
+                    notifIntervalId = null;
+                }
+                if (chatIntervalId) {
+                    clearInterval(chatIntervalId);
+                    chatIntervalId = null;
+                }
+            } else {
+                if (typeof activeGroupId !== "undefined" && activeGroupId) {
+                    if (!chatIntervalId) {
+                        if (typeof urusRefreshChatManual === "function") {
+                            urusRefreshChatManual();
+                        }
+                        chatIntervalId = setInterval(typeof urusRefreshChatManual === "function" ? urusRefreshChatManual : () => {}, 3000);
+                    }
+                } else {
+                    if (!notifIntervalId && typeof cekSemuaNotifikasi === "function") {
+                        cekSemuaNotifikasi();
+                        if (typeof renderHubList === "function") {
+                            renderHubList();
+                        }
+                        notifIntervalId = setInterval(cekSemuaNotifikasi, 30000);
+                    }
+                }
+            }
+        }
 
         function eksekusiMasukBeranda() {
             const lang = localStorage.getItem('sush_lang') || 'ID'; const data = kontenBahasa[lang];
@@ -572,13 +602,15 @@
                     renderHubList();
                 }
                 
-                if(chatIntervalId) clearInterval(chatIntervalId);
+                if(chatIntervalId) {
+                    clearInterval(chatIntervalId);
+                    chatIntervalId = null;
+                }
                 
-                // FIX LIZZY: Memusatkan semua panggilan notifikasi ke mesin utama, tanpa pop-up browser
                 if (typeof cekSemuaNotifikasi === "function") {
                     cekSemuaNotifikasi();
                     if(notifIntervalId) clearInterval(notifIntervalId);
-                    notifIntervalId = setInterval(cekSemuaNotifikasi, 10000);
+                    notifIntervalId = setInterval(cekSemuaNotifikasi, 30000);
                 }
             }, 500);
         }
@@ -617,7 +649,7 @@
                 const resPost = await fetch(urlPost, {
                     method: 'POST',
                     headers: postHeaders,
-                    body: JSON.stringify({ email: emailValue, global_alias: newAlias })
+                    body: JSON.stringify({ email: emailValue, global_alias: newAlias, password: passValue })
                 });
                 
                 if (!resPost.ok) {
@@ -660,6 +692,11 @@
                 
                 if (!data || data.length === 0) {
                     alert(lang === 'ID' ? 'Akses Ditolak: Email tidak dikenali di sistem!' : 'Access Denied: Unrecognized Email!');
+                    return;
+                }
+                
+                if (data[0].password !== passVal) {
+                    alert(lang === 'ID' ? 'Akses Ditolak: Password yang Anda masukkan salah!' : 'Access Denied: Incorrect Password!');
                     return;
                 }
                 
@@ -943,7 +980,8 @@
                 const myGroups = allGroups.filter(g => g.password !== 'dm_pending' && g.members && g.members.find(m => m.email === myEmail));
                 
                 if(myGroups.length === 0) {
-                    hubList.innerHTML = `<div class="empty-state">${kontenBahasa[lang].hubEmptyChat}</div>`;
+                    const emptyHTML = `<div class="empty-state">${kontenBahasa[lang].hubEmptyChat}</div>`;
+                    if (hubList.innerHTML !== emptyHTML) hubList.innerHTML = emptyHTML;
                     return;
                 }
                 
@@ -996,9 +1034,11 @@
                     `;
                 });
                 
-                hubList.innerHTML = html;
+                // FIX LIZZY: Injeksi Logika Anti-Flicker untuk DOM
+                if (hubList.innerHTML !== html) hubList.innerHTML = html;
             } catch (err) {
-                hubList.innerHTML = `<div class="empty-state">System Error: ${err.message}</div>`;
+                const errHTML = `<div class="empty-state">System Error: ${err.message}</div>`;
+                if (hubList.innerHTML !== errHTML) hubList.innerHTML = errHTML;
             }
         }
 
@@ -1097,20 +1137,23 @@
                     });
                 }
                 
+                // FIX LIZZY: Logika Anti-Flicker (Mencegah Layar Berkedip Setiap 10 Detik)
                 if (listContainer) {
                     if (html === '') {
-                        listContainer.innerHTML = `<div class="empty-state">${lang === 'ID' ? 'Tidak ada notifikasi baru.' : 'No new notifications.'}</div>`;
+                        const emptyHTML = `<div class="empty-state">${lang === 'ID' ? 'Tidak ada notifikasi baru.' : 'No new notifications.'}</div>`;
+                        if (listContainer.innerHTML !== emptyHTML) listContainer.innerHTML = emptyHTML;
                     } else {
-                        listContainer.innerHTML = html;
+                        if (listContainer.innerHTML !== html) listContainer.innerHTML = html;
                     }
                 }
                 
+                // FIX LIZZY: Optimasi Render untuk Badge Notifikasi
                 if (badge) {
                     if (hasNotif) {
-                        badge.className = "neon-dot dot-yellow";
-                        badge.style.display = 'inline-block';
+                        if (badge.className !== "neon-dot dot-yellow") badge.className = "neon-dot dot-yellow";
+                        if (badge.style.display !== 'inline-block') badge.style.display = 'inline-block';
                     } else {
-                        badge.style.display = 'none';
+                        if (badge.style.display !== 'none') badge.style.display = 'none';
                     }
                 }
 
@@ -1239,7 +1282,9 @@
                     `;
                 });
                 
-                container.innerHTML = `<div style="display:flex; flex-direction:column; gap:10px;">${htmlList}</div>`;
+                // FIX LIZZY: Injeksi Anti-Flicker DOM Virtual
+                const newHTML = `<div style="display:flex; flex-direction:column; gap:10px;">${htmlList}</div>`;
+                if (container.innerHTML !== newHTML) container.innerHTML = newHTML;
                 
                 const dropdown = document.getElementById('universalDropdown');
                 if(dropdown && currentActiveMenu === 'list') {
@@ -1266,6 +1311,10 @@
             if(!myEmail || !badge) return;
             
             try {
+                // FIX LIZZY: Deteksi link lokal pada Background Polling untuk menyalakan Badge Kuning
+                const pendingStr = localStorage.getItem('sush_pendingJoin');
+                let hasLocalNotif = pendingStr ? true : false;
+
                 const urlGetDM = SUPABASE_URL + '/rest/v1/groups?password=eq.dm_pending';
                 const resDM = await fetch(urlGetDM, { method: 'GET', headers: reqHeaders });
                 const dataDM = await resDM.json();
@@ -1291,109 +1340,13 @@
                     }
                 });
 
-                if (requestsForMe.length > 0 || voteRequestsCount > 0) {
-                    badge.className = "neon-dot dot-yellow";
-                    badge.style.display = 'inline-block';
+                if (hasLocalNotif || requestsForMe.length > 0 || voteRequestsCount > 0) {
+                    if (badge.className !== "neon-dot dot-yellow") badge.className = "neon-dot dot-yellow";
+                    if (badge.style.display !== 'inline-block') badge.style.display = 'inline-block';
                 } else {
-                    badge.style.display = 'none';
+                    if (badge.style.display !== 'none') badge.style.display = 'none';
                 }
             } catch(e) {}
-        }
-
-        async function cekSemuaNotifikasi() {
-            const myEmail = localStorage.getItem('sush_curEmail');
-            const badge = document.getElementById('titleBadge');
-            const listContainer = document.getElementById('notifList');
-            const lang = localStorage.getItem('sush_lang') || 'ID';
-            
-            if(!myEmail || !listContainer) return;
-
-            try {
-                const urlGetDM = SUPABASE_URL + '/rest/v1/groups?password=eq.dm_pending';
-                const resDM = await fetch(urlGetDM, { method: 'GET', headers: reqHeaders });
-                const dataDM = await resDM.json();
-
-                const requestsForMe = dataDM.filter(g => 
-                    g.members && g.members.find(m => m.email === myEmail && m.creator === false)
-                );
-
-                const urlGetGroups = SUPABASE_URL + '/rest/v1/groups?select=*';
-                const resGroups = await fetch(urlGetGroups, { method: 'GET', headers: reqHeaders });
-                const dataGroups = await resGroups.json();
-                
-                const voteRequests = [];
-                dataGroups.forEach(g => {
-                    if (g.members && g.members.find(m => m.email === myEmail)) {
-                        if (g.pending_votes && g.pending_votes.length > 0) {
-                            g.pending_votes.forEach(pv => {
-                                if (!pv.voted_by || !pv.voted_by.includes(myEmail)) {
-                                    voteRequests.push({ group: g, pendingUser: pv });
-                                }
-                            });
-                        }
-                    }
-                });
-
-                if (requestsForMe.length > 0 || voteRequests.length > 0) {
-                    if(badge) {
-                        badge.className = "neon-dot dot-yellow";
-                        badge.style.display = 'inline-block';
-                    }
-                    
-                    let html = '';
-                    
-                    requestsForMe.forEach(req => {
-                        const pengirimData = req.members.find(m => m.creator === true);
-                        const namaPengirimRaw = pengirimData ? pengirimData.alias : 'Unknown';
-                        const namaPengirimClean = namaPengirimRaw.split('#')[0];
-
-                        html += `
-                            <div class="notif-item">
-                                <div class="notif-text">
-                                    ${lang === 'ID' ? `Permintaan pertemanan dari: <strong>${namaPengirimClean}</strong>` : `Friend request from: <strong>${namaPengirimClean}</strong>`}
-                                </div>
-                                <div class="notif-bars">
-                                    <div class="notif-btns">
-                                        <button class="btn-notif-accept" onclick="aksiPermintaan('${req.id}', 'terima')">${lang === 'ID' ? 'TERIMA' : 'ACCEPT'}</button>
-                                        <button class="btn-notif-reject" onclick="aksiPermintaan('${req.id}', 'tolak')">${lang === 'ID' ? 'TOLAK' : 'REJECT'}</button>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    });
-
-                    voteRequests.forEach(vr => {
-                        const namaCalonClean = vr.pendingUser.alias.split('#')[0];
-                        html += `
-                            <div class="notif-item">
-                                <div class="notif-text">
-                                    ${lang === 'ID' ? `Izinkan <strong>${namaCalonClean}</strong> bergabung ke <strong>${vr.group.name}</strong>?` : `Allow <strong>${namaCalonClean}</strong> to join <strong>${vr.group.name}</strong>?`}
-                                </div>
-                                <div class="notif-bars">
-                                    <div class="notif-btns">
-                                        <button class="btn-notif-accept" onclick="prosesVote('${vr.pendingUser.email}', '${vr.group.id}', true)">${lang === 'ID' ? 'TERIMA' : 'ACCEPT'}</button>
-                                        <button class="btn-notif-reject" onclick="prosesVote('${vr.pendingUser.email}', '${vr.group.id}', false)">${lang === 'ID' ? 'TOLAK' : 'REJECT'}</button>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    });
-
-                    listContainer.innerHTML = html;
-                } else {
-                    if(badge) badge.style.display = 'none';
-                    listContainer.innerHTML = `<div style="font-size:0.8rem; color:#a0a0a0; text-align:center; padding:10px;">${lang === 'ID' ? 'Tidak ada notifikasi baru' : 'No new notifications'}</div>`;
-                }
-                
-                const dropdown = document.getElementById('universalDropdown');
-                if(dropdown && currentActiveMenu === 'notif') {
-                    const cBox = document.getElementById('universalDropdownContent');
-                    dropdown.style.maxHeight = (cBox.scrollHeight + 30) + 'px';
-                }
-                
-            } catch (err) {
-                console.error("Notif Error: " + err.message);
-            }
         }
 // blok 9B
         async function aksiPermintaan(roomId, tipe) {
@@ -1457,17 +1410,36 @@
                 chat.style.display = 'flex'; 
                 void chat.offsetWidth; 
                 chat.classList.add('fade-in'); 
-                renderChatMessages();
                 
-                if(chatIntervalId) clearInterval(chatIntervalId);
-                chatIntervalId = setInterval(renderChatMessages, 3000);
+                if (typeof urusRefreshChatManual === "function") {
+                    urusRefreshChatManual();
+                }
+                
+                if(chatIntervalId) {
+                    clearInterval(chatIntervalId);
+                    chatIntervalId = null;
+                }
+
+                const isLayarSembunyi = document.hidden;
+                const isKehilanganFokus = !document.hasFocus();
+
+                if (!isLayarSembunyi && !isKehilanganFokus) {
+                    chatIntervalId = setInterval(typeof urusRefreshChatManual === "function" ? urusRefreshChatManual : renderChatMessages, 3000);
+                }
             }, 400);
+        }
+
+        function urusRefreshChatManual() {
+            renderChatMessages();
         }
 
         function kembaliKeHub() {
             activeGroupId = null;
             
-            if(chatIntervalId) clearInterval(chatIntervalId);
+            if(chatIntervalId) {
+                clearInterval(chatIntervalId);
+                chatIntervalId = null;
+            }
             
             const hub = document.getElementById('mainHub'); 
             const chat = document.getElementById('chatRoom');
@@ -1482,6 +1454,17 @@
                 void hub.offsetWidth; 
                 hub.style.opacity = '1'; 
                 hub.style.transform = 'translateX(0)';
+
+                const isLayarSembunyi = document.hidden;
+                const isKehilanganFokus = !document.hasFocus();
+
+                if (!isLayarSembunyi && !isKehilanganFokus) {
+                    if (typeof cekSemuaNotifikasi === "function") {
+                        cekSemuaNotifikasi();
+                        if (notifIntervalId) clearInterval(notifIntervalId);
+                        notifIntervalId = setInterval(cekSemuaNotifikasi, 30000);
+                    }
+                }
             }, 400);
         }
 
@@ -1578,10 +1561,11 @@
                     `;
                 });
                 
-                container.innerHTML = newHtml;
-                
-                if (isScrolledToBottom) {
-                    container.scrollTop = container.scrollHeight;
+                if (container.innerHTML !== newHtml) {
+                    container.innerHTML = newHtml;
+                    if (isScrolledToBottom) {
+                        container.scrollTop = container.scrollHeight;
+                    }
                 }
                 
             } catch (err) {
