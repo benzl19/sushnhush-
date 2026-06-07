@@ -8,7 +8,8 @@
 </head>
 <body>
     <div class="container">
-        <div class="auth-gate" id="authGate">
+        <!-- Taktis: Ditambahkan display block & opacity 1 agar input form langsung muncul -->
+        <div class="auth-gate" id="authGate" style="display: block; opacity: 1;">
             <svg class="svg-logo-small" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                 <line x1="40" y1="20" x2="30" y2="80" class="shh-line" />
                 <line x1="60" y1="20" x2="50" y2="80" class="shh-line" />
@@ -50,10 +51,20 @@
         </div>
     </div>
     <script src="app-global.js"></script>
-    <script>
+        <script>
         window.addEventListener('load', function() {
-            const lang = localStorage.getItem('sush_lang') || 'ID';
-            if (typeof kontenBahasa === 'undefined') return;
+            const lang = localStorage.getItem('sush_lang');
+            
+            // Jaring Pengaman Taktis: Tendang mundur ke index.html (Gerbang Bahasa) jika data kosong
+            if (!lang || typeof kontenBahasa === 'undefined') {
+                if (typeof navigasiKeHalaman === 'function') {
+                    navigasiKeHalaman('index.html', 'slide-out-right');
+                } else {
+                    window.location.href = 'index.html';
+                }
+                return;
+            }
+            
             const data = kontenBahasa[lang];
             if (!data) return;
 
