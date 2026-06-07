@@ -121,7 +121,6 @@
     </style>
 </head>
 <body>
-
     <div class="container">
         <div class="language-gate" id="langGate">
             <svg class="svg-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
@@ -184,6 +183,7 @@
             
             <div id="formRegister" class="hide-node">
                 <input type="text" id="regUser" class="input-field" placeholder="Username..." autocomplete="off" oninput="cekPassword()">
+                <p class="error-text" id="userTakenText">Username sudah digunakan!</p>
                 <input type="email" id="regEmail" class="input-field" placeholder="Email Aktif..." autocomplete="email" oninput="cekPassword()">
                 
                 <div class="password-wrapper">
@@ -328,7 +328,8 @@
                 btnCopyLink: 'Salin Link Undang Teman',
                 msgNew: 'Baru', msgAging: 'Lama', msgFading: 'Memudar',
                 groupMembers: 'Anggota',
-                lblUser: 'Username:', lblAlias: 'Nama Samaran:', lblEmail: 'Email:'
+                lblUser: 'Username:', lblAlias: 'Nama Samaran:', lblEmail: 'Email:',
+                userTaken: 'Username sudah digunakan!'
             },
             'EN': {
                 title: 'Welcome to SUSHNHUSH',
@@ -361,13 +362,46 @@
                 btnCopyLink: 'Copy Invite Link',
                 msgNew: 'New', msgAging: 'Aging', msgFading: 'Fading',
                 groupMembers: 'Members',
-                lblUser: 'Username:', lblAlias: 'Alias:', lblEmail: 'Email:'
+                lblUser: 'Username:', lblAlias: 'Alias:', lblEmail: 'Email:',
+                userTaken: 'Username is already taken!'
             }
         };
 
         let notifIntervalId = null;
         let activeGroupId = null;
         let currentActiveMenu = null; 
+
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const encodedGroup = urlParams.get('g');
+            
+            if (encodedGroup) {
+                try {
+                    const decodedStr = decodeURIComponent(escape(atob(encodedGroup)));
+                    const parts = decodedStr.split('|');
+                    if (parts.length === 2) {
+                        localStorage.setItem('sush_pendingJoin', JSON.stringify({ name: parts[0], id: parts[1] }));
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    }
+                } catch (e) {
+                    console.error('Invalid group link');
+                }
+            }
+
+            document.addEventListener("visibilitychange", kendaliDetakJantungAplikasi);
+            window.addEventListener("focus", kendaliDetakJantungAplikasi);
+            window.addEventListener("blur", kendaliDetakJantungAplikasi);
+            
+            if (localStorage.getItem('sush_curEmail')) {
+                const gate = document.getElementById('langGate');
+                if (gate) gate.style.display = 'none';
+                setTimeout(() => {
+                    if (typeof eksekusiMasukBeranda === 'function') {
+                        eksekusiMasukBeranda();
+                    }
+                }, 100);
+            }
+        };
 
         function masukLandingPage(lang) {
             localStorage.setItem('sush_lang', lang); const data = kontenBahasa[lang];
@@ -408,6 +442,7 @@
             document.getElementById('mJoinConfirm').innerText = data.mJoinConfirm;
             document.getElementById('systemMsgWelcome').innerText = data.sysWelcome;
             document.getElementById('btnInviteLink').innerText = data.btnCopyLink;
+            document.getElementById('userTakenText').innerText = data.userTaken;
 
             const btnsToggle = document.querySelectorAll('.toggle-pass');
             btnsToggle.forEach(b => { b.innerText = data.passShow; });
@@ -421,7 +456,6 @@
                 landing.classList.remove('hide-node');
                 landing.style.display = 'block'; 
                 
-                // Memaksa browser merender ulang layar dengan membaca offsetWidth (Cara paling aman & stabil)
                 void landing.offsetWidth; 
                 
                 landing.classList.add('fade-in'); 
@@ -506,7 +540,7 @@
             if (!inputUser) return;
             alert(lang === 'ID' ? `[PROSES PEMULIHAN 3 BLOK AKTIF] \n\nSistem menampilkan Pertanyaan Rahasia & Clue buatanmu sendiri. \n\n[Skenario Sukses]: Jika Jawaban cocok, link reset otomatis terkirim via Email Service Gratisan (Brevo/Resend)!` : `[3-BLOCK RECOVERY ACTIVE] \n\nSystem fetches your unique Secret Question & Clue. \n\n[Success Scenario]: If the Answer matches, a reset link will be sent via Free Email Service!`);
         }
-// Blok 6
+ // Blok 6
         let chatIntervalId = null; 
 
         const anonNouns = [
@@ -620,10 +654,19 @@
             const emailValue = document.getElementById('regEmail').value.trim(); 
             const passValue = document.getElementById('regPass').value;
             const passwordPattern = /^(?=.*[a-zA-Z])(?=.*\d).{6,}$/; 
+            const invalidUserPattern = /[@]/;
             const lang = localStorage.getItem('sush_lang') || 'ID';
+            
+            const errUserTaken = document.getElementById('userTakenText');
+            if (errUserTaken) errUserTaken.style.display = 'none';
             
             if(!userValue || !emailValue) {
                 alert(lang === 'ID' ? "Username dan Email wajib diisi!" : "Username and Email are required!");
+                return;
+            }
+
+            if (invalidUserPattern.test(userValue)) {
+                alert(lang === 'ID' ? "Akses Ditolak: Username tidak boleh mengandung simbol '@' atau menyerupai format email!" : "Access Denied: Username must not contain the '@' symbol or resemble an email format!");
                 return;
             }
             
@@ -633,6 +676,15 @@
             }
             
             try {
+                const urlCekUser = SUPABASE_URL + '/rest/v1/users?username=eq.' + encodeURIComponent(userValue);
+                const resCekUser = await fetch(urlCekUser, { method: 'GET', headers: reqHeaders });
+                const dataCekUser = await resCekUser.json();
+                
+                if (dataCekUser && dataCekUser.length > 0) {
+                    if (errUserTaken) errUserTaken.style.display = 'block';
+                    return;
+                }
+
                 const urlCek = SUPABASE_URL + '/rest/v1/users?email=eq.' + encodeURIComponent(emailValue);
                 const resCek = await fetch(urlCek, { method: 'GET', headers: reqHeaders });
                 const dataCek = await resCek.json();
@@ -649,7 +701,7 @@
                 const resPost = await fetch(urlPost, {
                     method: 'POST',
                     headers: postHeaders,
-                    body: JSON.stringify({ email: emailValue, global_alias: newAlias, password: passValue })
+                    body: JSON.stringify({ username: userValue, email: emailValue, global_alias: newAlias, password: passValue })
                 });
                 
                 if (!resPost.ok) {
@@ -686,12 +738,12 @@
             }
 
             try {
-                const urlGet = SUPABASE_URL + '/rest/v1/users?email=eq.' + encodeURIComponent(loginVal);
+                const urlGet = SUPABASE_URL + '/rest/v1/users?or=(email.eq.' + encodeURIComponent(loginVal) + ',username.eq.' + encodeURIComponent(loginVal) + ')';
                 const res = await fetch(urlGet, { method: 'GET', headers: reqHeaders });
                 const data = await res.json();
                 
                 if (!data || data.length === 0) {
-                    alert(lang === 'ID' ? 'Akses Ditolak: Email tidak dikenali di sistem!' : 'Access Denied: Unrecognized Email!');
+                    alert(lang === 'ID' ? 'Akses Ditolak: Kredensial tidak dikenali di sistem!' : 'Access Denied: Unrecognized Credentials!');
                     return;
                 }
                 
@@ -700,7 +752,7 @@
                     return;
                 }
                 
-                localStorage.setItem('sush_curUser', 'Member'); 
+                localStorage.setItem('sush_curUser', data[0].username || 'Member'); 
                 localStorage.setItem('sush_curEmail', data[0].email);
                 localStorage.setItem('sush_curAlias', data[0].global_alias);
                 
@@ -762,23 +814,53 @@
             
             if(!searchVal) return;
 
-            if (searchVal.includes('#') && searchVal.length > 5) {
-                if (searchVal === localStorage.getItem('sush_curAlias')) {
-                    alert(lang === 'ID' ? 'Kamu tidak bisa menambah akun serumah sendiri!' : 'You cannot add your own ID!');
+            if (searchVal.includes('bit.ly') || searchVal.includes('?g=')) {
+                try {
+                    let base64Token = '';
+                    if (searchVal.includes('?g=')) {
+                        base64Token = searchVal.split('?g=')[1];
+                    } else {
+                        base64Token = searchVal;
+                    }
+
+                    if (base64Token) {
+                        const decodedStr = decodeURIComponent(escape(atob(base64Token)));
+                        const parts = decodedStr.split('|');
+                        if (parts.length === 2) {
+                            localStorage.setItem('sush_pendingJoin', JSON.stringify({ name: parts[0], id: parts[1] }));
+                            document.getElementById('searchSecretId').value = '';
+                            
+                            if (typeof cekSemuaNotifikasi === 'function') {
+                                cekSemuaNotifikasi();
+                            }
+                            
+                            if (currentActiveMenu !== 'notif' && typeof toggleMenuPanel === 'function') {
+                                toggleMenuPanel('notif');
+                            }
+                            return;
+                        }
+                    }
+                    throw new Error();
+                } catch (e) {
+                    alert(lang === 'ID' ? 'Format tautan undangan tidak valid!' : 'Invalid invite link format!');
                     return;
                 }
-                try {
-                    const urlCekUser = SUPABASE_URL + '/rest/v1/users?global_alias=eq.' + encodeURIComponent(searchVal);
-                    const resCekUser = await fetch(urlCekUser, { method: 'GET', headers: reqHeaders });
-                    const dataUser = await resCekUser.json();
+            }
 
-                    if (!dataUser || dataUser.length === 0) {
-                        alert(lang === 'ID' ? 'ID Pengguna tidak ditemukan di radar rahasia!' : 'Secret User ID not found in radar!');
+            try {
+                const urlCekUser = SUPABASE_URL + '/rest/v1/users?or=(global_alias.eq.' + encodeURIComponent(searchVal) + ',username.eq.' + encodeURIComponent(searchVal) + ')';
+                const resCekUser = await fetch(urlCekUser, { method: 'GET', headers: reqHeaders });
+                const dataUser = await resCekUser.json();
+
+                if (dataUser && dataUser.length > 0) {
+                    const targetUser = dataUser[0];
+                    if (targetUser.global_alias === localStorage.getItem('sush_curAlias') || targetUser.email === localStorage.getItem('sush_curEmail')) {
+                        alert(lang === 'ID' ? 'Kamu tidak bisa menambah akun serumah sendiri!' : 'You cannot add your own ID!');
                         return;
                     }
 
-                    const targetEmail = dataUser[0].email;
-                    const targetAlias = dataUser[0].global_alias;
+                    const targetEmail = targetUser.email;
+                    const targetAlias = targetUser.global_alias;
                     const myEmail = localStorage.getItem('sush_curEmail');
                     const myAlias = localStorage.getItem('sush_curAlias');
 
@@ -826,20 +908,25 @@
 
                     alert(lang === 'ID' ? 'Akun berhasil ditemukan. Mohon menunggu konfirmasi.' : 'Account found successfully. Please wait for confirmation.');
                     document.getElementById('searchSecretId').value = '';
-                } catch (err) {
-                    alert('System Error: ' + err.message);
+                } else {
+                    if (searchVal.includes('#')) {
+                        alert(lang === 'ID' ? 'ID Pengguna tidak ditemukan di radar rahasia!' : 'Secret User ID not found in radar!');
+                        return;
+                    }
+
+                    const cleanGroupId = searchVal.replace('#', '');
+                    localStorage.setItem('sush_pendingJoin', JSON.stringify({ name: 'Grup Rahasia', id: cleanGroupId }));
+                    
+                    if (typeof cekSemuaNotifikasi === 'function') {
+                        cekSemuaNotifikasi();
+                    }
+                    
+                    if (currentActiveMenu !== 'notif' && typeof toggleMenuPanel === 'function') {
+                        toggleMenuPanel('notif');
+                    }
                 }
-            } else {
-                const cleanGroupId = searchVal.replace('#', '');
-                localStorage.setItem('sush_pendingJoin', JSON.stringify({ name: 'Grup Rahasia', id: cleanGroupId }));
-                
-                if (typeof cekSemuaNotifikasi === 'function') {
-                    cekSemuaNotifikasi();
-                }
-                
-                if (currentActiveMenu !== 'notif' && typeof toggleMenuPanel === 'function') {
-                    toggleMenuPanel('notif');
-                }
+            } catch (err) {
+                alert('System Error: ' + err.message);
             }
         }
 // Blok 8
@@ -855,11 +942,24 @@
             tutupModal('modalCreate'); 
             
             const generatedGroupAlias = `${anonNouns[Math.floor(Math.random() * anonNouns.length)]}#${generateSecretPin()}`;
-            const randomID = 'GR' + Math.floor(100000 + Math.random() * 900000).toString(16).toUpperCase() + Math.floor(10 + Math.random() * 89).toString(); 
             const myEmail = localStorage.getItem('sush_curEmail');
             
             try {
                 activeGroupId = null;
+                let randomID = '';
+                let isUnique = false;
+                
+                while (!isUnique) {
+                    randomID = 'GR' + Math.floor(100000 + Math.random() * 900000).toString(16).toUpperCase() + Math.floor(10 + Math.random() * 89).toString();
+                    const urlCheck = SUPABASE_URL + '/rest/v1/groups?id=eq.' + encodeURIComponent(randomID);
+                    const resCheck = await fetch(urlCheck, { method: 'GET', headers: reqHeaders });
+                    const checkData = await resCheck.json();
+                    
+                    if (!checkData || checkData.length === 0) {
+                        isUnique = true;
+                    }
+                }
+
                 const urlPost = SUPABASE_URL + '/rest/v1/groups';
                 const postHeaders = Object.assign({}, reqHeaders, { 'Prefer': 'return=representation' });
                 
@@ -913,17 +1013,32 @@
                 const myEmail = localStorage.getItem('sush_curEmail');
                 const myAlias = localStorage.getItem('sush_curAlias');
                 
+                const isAlreadyMember = data[0].members && data[0].members.some(m => m.email === myEmail);
+                if (isAlreadyMember) {
+                    alert(lang === 'ID' ? 'Anda sudah berada di dalam grup ini.' : 'You are already in this group.');
+                    localStorage.removeItem('sush_pendingJoin');
+                    cekSemuaNotifikasi();
+                    return;
+                }
+
                 const updatedPending = data[0].pending_votes || [];
-                updatedPending.push({ email: myEmail, alias: myAlias, voted_by: [] });
+                const isAlreadyPending = updatedPending.some(p => p.email === myEmail);
                 
-                const urlPatch = SUPABASE_URL + '/rest/v1/groups?id=eq.' + encodeURIComponent(safeId);
-                await fetch(urlPatch, {
-                    method: 'PATCH',
-                    headers: Object.assign({}, reqHeaders, { 'Prefer': 'return=representation' }),
-                    body: JSON.stringify({ pending_votes: updatedPending })
-                });
+                if (!isAlreadyPending) {
+                    updatedPending.push({ email: myEmail, alias: myAlias, voted_by: [], rejected_by: [] });
+                    
+                    const urlPatch = SUPABASE_URL + '/rest/v1/groups?id=eq.' + encodeURIComponent(safeId);
+                    await fetch(urlPatch, {
+                        method: 'PATCH',
+                        headers: Object.assign({}, reqHeaders, { 'Prefer': 'return=representation' }),
+                        body: JSON.stringify({ pending_votes: updatedPending })
+                    });
+                    
+                    alert(lang === 'ID' ? 'Permintaan bergabung dikirim ke admin grup.' : 'Join request sent to group admins.');
+                } else {
+                    alert(lang === 'ID' ? 'Permintaan Anda sudah dalam antrean sebelumnya.' : 'Your request is already pending.');
+                }
                 
-                alert(lang === 'ID' ? 'Permintaan bergabung dikirim ke admin grup.' : 'Join request sent to group admins.');
                 localStorage.removeItem('sush_pendingJoin');
                 cekSemuaNotifikasi();
             } catch (err) {
@@ -946,12 +1061,28 @@
                 let targetIdx = pVotes.findIndex(v => v.email === targetEmail);
                 
                 if (targetIdx !== -1) {
-                    if(setuju) {
-                        if(!pVotes[targetIdx].voted_by.includes(myEmail)) pVotes[targetIdx].voted_by.push(myEmail);
+                    if (!pVotes[targetIdx].voted_by) pVotes[targetIdx].voted_by = [];
+                    if (!pVotes[targetIdx].rejected_by) pVotes[targetIdx].rejected_by = [];
+
+                    if (setuju) {
+                        if (!pVotes[targetIdx].voted_by.includes(myEmail) && !pVotes[targetIdx].rejected_by.includes(myEmail)) {
+                            pVotes[targetIdx].voted_by.push(myEmail);
+                        }
+                    } else {
+                        if (!pVotes[targetIdx].rejected_by.includes(myEmail) && !pVotes[targetIdx].voted_by.includes(myEmail)) {
+                            pVotes[targetIdx].rejected_by.push(myEmail);
+                        }
                     }
 
-                    if((pVotes[targetIdx].voted_by.length / group.members.length) > 0.5) {
-                        group.members.push({ email: targetEmail, alias: pVotes[targetIdx].alias });
+                    const voteThreshold = group.members.length * 0.5;
+
+                    if (pVotes[targetIdx].voted_by.length > voteThreshold) {
+                        const isAlreadyMember = group.members.some(m => m.email === targetEmail);
+                        if (!isAlreadyMember) {
+                            group.members.push({ email: targetEmail, alias: pVotes[targetIdx].alias });
+                        }
+                        pVotes.splice(targetIdx, 1);
+                    } else if (pVotes[targetIdx].rejected_by.length > voteThreshold) {
                         pVotes.splice(targetIdx, 1);
                     }
 
@@ -1034,7 +1165,6 @@
                     `;
                 });
                 
-                // FIX LIZZY: Injeksi Logika Anti-Flicker untuk DOM
                 if (hubList.innerHTML !== html) hubList.innerHTML = html;
             } catch (err) {
                 const errHTML = `<div class="empty-state">System Error: ${err.message}</div>`;
@@ -1091,7 +1221,9 @@
                         hasNotif = true;
                         const pengirimData = req.members.find(m => m.creator === true);
                         const namaPengirimClean = pengirimData ? pengirimData.alias.split('#')[0] : 'Unknown';
-                        const txt = lang === 'ID' ? `Permintaan pertemanan dari: <strong>${namaPengirimClean}</strong>` : `Friend request from: <strong>${namaPengirimClean}</strong>`;
+                        const txt = lang === 'ID' 
+                            ? `User <strong>${namaPengirimClean}</strong> menambahkan anda menjadi teman.` 
+                            : `User <strong>${namaPengirimClean}</strong> added you as a friend.`;
                         const btnAcc = lang === 'ID' ? 'TERIMA' : 'ACCEPT';
                         const btnRej = lang === 'ID' ? 'TOLAK' : 'REJECT';
 
@@ -1112,7 +1244,10 @@
                         if (g.password !== 'dm_pending' && g.password !== 'dm_active' && g.members && g.members.find(m => m.email === myEmail)) {
                             if (g.pending_votes && g.pending_votes.length > 0) {
                                 g.pending_votes.forEach(pv => {
-                                    if (!pv.voted_by || !pv.voted_by.includes(myEmail)) {
+                                    const vBy = pv.voted_by || [];
+                                    const rBy = pv.rejected_by || [];
+                                    
+                                    if (!vBy.includes(myEmail) && !rBy.includes(myEmail)) {
                                         hasNotif = true;
                                         const namaCalonClean = pv.alias.split('#')[0];
                                         const txt = lang === 'ID' ? `Izinkan <strong>${namaCalonClean}</strong> bergabung ke <strong>${g.name}</strong>?` : `Allow <strong>${namaCalonClean}</strong> to join <strong>${g.name}</strong>?`;
@@ -1137,7 +1272,6 @@
                     });
                 }
                 
-                // FIX LIZZY: Logika Anti-Flicker (Mencegah Layar Berkedip Setiap 10 Detik)
                 if (listContainer) {
                     if (html === '') {
                         const emptyHTML = `<div class="empty-state">${lang === 'ID' ? 'Tidak ada notifikasi baru.' : 'No new notifications.'}</div>`;
@@ -1147,7 +1281,6 @@
                     }
                 }
                 
-                // FIX LIZZY: Optimasi Render untuk Badge Notifikasi
                 if (badge) {
                     if (hasNotif) {
                         if (badge.className !== "neon-dot dot-yellow") badge.className = "neon-dot dot-yellow";
@@ -1231,6 +1364,24 @@
             currentActiveMenu = jenisMenu;
         }
 
+        function togglePinFriend(roomId, event) {
+            if (event) event.stopPropagation();
+            let pinned = [];
+            try {
+                pinned = JSON.parse(localStorage.getItem('sush_pinnedFriends')) || [];
+            } catch (e) {
+                pinned = [];
+            }
+            
+            if (pinned.includes(roomId)) {
+                pinned = pinned.filter(id => id !== roomId);
+            } else {
+                pinned.push(roomId);
+            }
+            localStorage.setItem('sush_pinnedFriends', JSON.stringify(pinned));
+            renderFriendList();
+        }
+
         async function renderFriendList() {
             const container = document.getElementById('friendListContainer');
             if(!container) return;
@@ -1250,40 +1401,129 @@
                     return;
                 }
                 
+                const urlMsgs = SUPABASE_URL + '/rest/v1/messages?select=*';
+                const resMsgs = await fetch(urlMsgs, { method: 'GET', headers: reqHeaders });
+                const allMsgs = await resMsgs.json();
+                
+                const now = new Date().getTime();
                 let temanList = [];
+                
                 myDMs.forEach(dm => {
                     const temanObj = dm.members.find(m => m.email !== myEmail);
                     if(temanObj) {
-                        temanList.push({ alias: temanObj.alias, roomId: dm.id });
+                        const roomMsgs = allMsgs.filter(m => m.group_id === dm.id);
+                        let latestTime = 0;
+                        if (roomMsgs.length > 0) {
+                            latestTime = Math.max(...roomMsgs.map(m => new Date(m.created_at).getTime()));
+                        }
+                        
+                        temanList.push({ 
+                            alias: temanObj.alias, 
+                            roomId: dm.id,
+                            latestMsgTime: latestTime
+                        });
                     }
                 });
                 
-                temanList.sort((a, b) => {
+                let pinnedIds = [];
+                try {
+                    pinnedIds = JSON.parse(localStorage.getItem('sush_pinnedFriends')) || [];
+                } catch (e) {
+                    pinnedIds = [];
+                }
+                
+                let pinnedPasukan = [];
+                let regulerPasukan = [];
+                
+                temanList.forEach(t => {
+                    if (pinnedIds.includes(t.roomId)) {
+                        pinnedPasukan.push(t);
+                    } else {
+                        regulerPasukan.push(t);
+                    }
+                });
+                
+                pinnedPasukan.sort((a, b) => {
                     const partsA = a.alias.split('#');
                     const partsB = b.alias.split('#');
                     const namaA = partsA[0].toLowerCase();
                     const namaB = partsB[0].toLowerCase();
-                    
                     if (namaA < namaB) return -1;
                     if (namaA > namaB) return 1;
-                    
+                    const numA = parseInt(partsA[1], 10) || 0;
+                    const numB = parseInt(partsB[1], 10) || 0;
+                    return numA - numB;
+                });
+
+                regulerPasukan.sort((a, b) => {
+                    const partsA = a.alias.split('#');
+                    const partsB = b.alias.split('#');
+                    const namaA = partsA[0].toLowerCase();
+                    const namaB = partsB[0].toLowerCase();
+                    if (namaA < namaB) return -1;
+                    if (namaA > namaB) return 1;
                     const numA = parseInt(partsA[1], 10) || 0;
                     const numB = parseInt(partsB[1], 10) || 0;
                     return numA - numB;
                 });
                 
                 let htmlList = '';
-                temanList.forEach(t => {
+                
+                if (pinnedPasukan.length > 0) {
+                    htmlList += `<div class="divider-text" style="border-bottom: 1px solid #45f3ff; font-weight: bold; padding-bottom: 2px;">📌 PINNED</div>`;
+                    pinnedPasukan.forEach(t => {
+                        let indicator = '';
+                        if (t.latestMsgTime > 0) {
+                            const diffHours = (now - t.latestMsgTime) / 3600000;
+                            if (diffHours < 24) {
+                                if (diffHours < 9) indicator = ` <span class="neon-dot dot-green">•</span>`;
+                                else if (diffHours < 22) indicator = ` <span class="neon-dot dot-yellow">•</span>`;
+                                else indicator = ` <span class="neon-dot dot-red">•</span>`;
+                            }
+                        }
+                        
+                        htmlList += `
+                            <div class="list-item-friend" onclick="bukaChatRoom('${t.roomId}')" style="margin-bottom: 5px; border-left: 3px solid #ffd700;">
+                                <span class="list-friend-name">${t.alias}${indicator}</span>
+                                <div style="display: flex; align-items: center; gap: 15px;">
+                                    <span onclick="togglePinFriend('${t.roomId}', event)" style="cursor: pointer; font-size: 0.85rem; color: #ff4a4a; font-weight: bold;">UNPIN</span>
+                                    <span style="color:#45f3ff; font-size:1.2rem;">--></span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                let currentAbjadMarker = '';
+                regulerPasukan.forEach(t => {
+                    const firstLetter = t.alias.charAt(0).toUpperCase();
+                    if (firstLetter !== currentAbjadMarker) {
+                        currentAbjadMarker = firstLetter;
+                        htmlList += `<div class="divider-text" style="margin-top: 10px; font-weight: bold;">${currentAbjadMarker}</div>`;
+                    }
+                    
+                    let indicator = '';
+                    if (t.latestMsgTime > 0) {
+                        const diffHours = (now - t.latestMsgTime) / 3600000;
+                        if (diffHours < 24) {
+                            if (diffHours < 9) indicator = ` <span class="neon-dot dot-green">•</span>`;
+                            else if (diffHours < 22) indicator = ` <span class="neon-dot dot-yellow">•</span>`;
+                            else indicator = ` <span class="neon-dot dot-red">•</span>`;
+                        }
+                    }
+                    
                     htmlList += `
-                        <div class="list-item-friend" onclick="bukaChatRoom('${t.roomId}')">
-                            <span class="list-friend-name">${t.alias}</span>
-                            <span style="color:#45f3ff; font-size:1.2rem;">➤</span>
+                        <div class="list-item-friend" onclick="bukaChatRoom('${t.roomId}')" style="margin-bottom: 5px;">
+                            <span class="list-friend-name">${t.alias}${indicator}</span>
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <span onclick="togglePinFriend('${t.roomId}', event)" style="cursor: pointer; font-size: 0.85rem; color: #45f3ff; font-weight: bold;">PIN</span>
+                                <span style="color:#45f3ff; font-size:1.2rem;">--></span>
+                            </div>
                         </div>
                     `;
                 });
                 
-                // FIX LIZZY: Injeksi Anti-Flicker DOM Virtual
-                const newHTML = `<div style="display:flex; flex-direction:column; gap:10px;">${htmlList}</div>`;
+                const newHTML = `<div style="display:flex; flex-direction:column; gap:5px;">${htmlList}</div>`;
                 if (container.innerHTML !== newHTML) container.innerHTML = newHTML;
                 
                 const dropdown = document.getElementById('universalDropdown');
@@ -1311,7 +1551,6 @@
             if(!myEmail || !badge) return;
             
             try {
-                // FIX LIZZY: Deteksi link lokal pada Background Polling untuk menyalakan Badge Kuning
                 const pendingStr = localStorage.getItem('sush_pendingJoin');
                 let hasLocalNotif = pendingStr ? true : false;
 
@@ -1481,10 +1720,14 @@
                 if (!data || data.length === 0) return;
                 
                 const groupName = data[0].name;
-                const link = window.location.origin + window.location.pathname + '?join=' + encodeURIComponent(groupName) + '&id=' + encodeURIComponent(safeId);
+                
+                // Taktik Masking URL & Base64 Obfuscation
+                const rawData = groupName + '|' + safeId;
+                const encodedData = btoa(unescape(encodeURIComponent(rawData)));
+                const link = 'https://bit.ly/4uKqh7z?g=' + encodedData;
                 
                 navigator.clipboard.writeText(link);
-                alert(lang === 'ID' ? 'Link berhasil disalin! Kirim ke temanmu.' : 'Link copied! Send to your friends.');
+                alert(lang === 'ID' ? 'Link misterius berhasil disalin! Kirim ke sirkelmu secara rahasia.' : 'Mysterious link copied! Send to your circle secretly.');
             } catch (err) {
                 alert('System Error: ' + err.message);
             }
