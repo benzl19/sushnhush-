@@ -8,7 +8,7 @@
 </head>
 <body>
     <div class="container">
-        <!-- Taktis: Ditambahkan display block & opacity 1 agar input form langsung muncul -->
+        <!-- Taktis: Terkunci display block & opacity 1 agar langsung merobek pelindung CSS -->
         <div class="auth-gate" id="authGate" style="display: block; opacity: 1;">
             <svg class="svg-logo-small" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                 <line x1="40" y1="20" x2="30" y2="80" class="shh-line" />
@@ -52,11 +52,29 @@
     </div>
     <script src="app-global.js"></script>
         <script>
+        // Taktis: Menyuntikkan langsung objek kamus bahasa Blok 5 lama ke dalam file internal
+        const kontenBahasaLokal = {
+            'ID': {
+                tabL: 'Masuk', tabR: 'Daftar Akun',
+                loginUserPlaceholder: 'Username / Email...', loginPassPlaceholder: 'Password...', loginSubmit: 'Masuk Gerbang', loginForgot: 'Lupa Password? (Gunakan 3 Blok)',
+                regUserPlaceholder: 'Username...', regEmailPlaceholder: 'Email Aktif...', regPassPlaceholder: 'Password...', passHelper: '*Password terdiri dari minimal 6 karakter gabungan antara angka dan huruf.',
+                reg3BlockTitle: 'Keamanan 3 Blok (Anti-Lupa)', regQPlaceholder: '1. Buat Pertanyaan Rahasia (Cth: Kucing pertama?)...', regCluePlaceholder: '2. Clue Jawaban (Cth: Warna Oren)...', regAnsPlaceholder: '3. Jawaban Rahasia (Akan di-hash)...', regSubmit: 'Daftar & Acak Nama Samaran',
+                passShow: 'LIHAT', passHide: 'TUTUP', userTaken: 'Username sudah digunakan!'
+            },
+            'EN': {
+                tabL: 'Sign In', tabR: 'Register',
+                loginUserPlaceholder: 'Username / Email...', loginPassPlaceholder: 'Password...', loginSubmit: 'Enter the Gate', loginForgot: 'Forgot Password? (Use 3 Blocks)',
+                regUserPlaceholder: 'Username...', regEmailPlaceholder: 'Active Email...', regPassPlaceholder: 'Password...', passHelper: '*Password must be at least 6 characters containing both letters and numbers.',
+                reg3BlockTitle: '3-Block Security (Anti-Forget)', regQPlaceholder: '1. Secret Question (Ex: First pet?)...', regCluePlaceholder: '2. Answer Clue (Ex: Orange color)...', regAnsPlaceholder: '3. Secret Answer (Will be hashed)...', regSubmit: 'Register & Randomize Alias',
+                passShow: 'SHOW', passHide: 'HIDE', userTaken: 'Username is already taken!'
+            }
+        };
+
         window.addEventListener('load', function() {
             const lang = localStorage.getItem('sush_lang');
             
-            // Jaring Pengaman Taktis: Tendang mundur ke index.html (Gerbang Bahasa) jika data kosong
-            if (!lang || typeof kontenBahasa === 'undefined') {
+            // Jaring Pengaman: Jika hancur/kosong, paksa user mundur memilih bahasa ke index.html baru
+            if (!lang) {
                 if (typeof navigasiKeHalaman === 'function') {
                     navigasiKeHalaman('index.html', 'slide-out-right');
                 } else {
@@ -65,7 +83,7 @@
                 return;
             }
             
-            const data = kontenBahasa[lang];
+            const data = kontenBahasaLokal[lang];
             if (!data) return;
 
             document.getElementById('tabLogin').innerText = data.tabL; 
@@ -112,8 +130,7 @@
         function togglePassword(inputId, btn) {
             const input = document.getElementById(inputId);
             const lang = localStorage.getItem('sush_lang') || 'ID';
-            if (typeof kontenBahasa === 'undefined') return;
-            const data = kontenBahasa[lang];
+            const data = kontenBahasaLokal[lang];
             if (input.type === 'password') { 
                 input.type = 'text'; 
                 btn.innerText = data.passHide; 
@@ -122,6 +139,7 @@
                 btn.innerText = data.passShow; 
             }
         }
+
         function cekPassword() {
             const user = document.getElementById('regUser').value.trim();
             const email = document.getElementById('regEmail').value.trim();
@@ -237,6 +255,7 @@
                 alert(lang === 'ID' ? "Koneksi ke server gagal: " + err.message : "Failed to connect to server: " + err.message);
             }
         }
+
         async function simulasiLogin() {
             const loginVal = document.getElementById('loginUser').value.trim();
             const passVal = document.getElementById('loginPass').value; 
