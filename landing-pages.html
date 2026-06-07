@@ -8,7 +8,8 @@
 </head>
 <body>
     <div class="container">
-        <div class="landing-page" id="landingPage">
+        <!-- Taktis: Ditambahkan display block agar tidak tersembunyi CSS bawaan -->
+        <div class="landing-page" id="landingPage" style="display: block; opacity: 1;">
             <button class="btn-back-gate" id="btnBackGate" onclick="mundurKeGerbang()">← Back</button>
             <svg class="svg-logo-small" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                 <line x1="40" y1="20" x2="30" y2="80" class="shh-line" />
@@ -57,10 +58,11 @@
         });
 
         function mundurKeGerbang() {
+            // Target diubah secara presisi ke index.html
             if (typeof navigasiKeHalaman === 'function') {
-                navigasiKeHalaman('languages.html', 'slide-out-right');
+                navigasiKeHalaman('index.html', 'slide-out-right');
             } else {
-                window.location.href = 'languages.html';
+                window.location.href = 'index.html';
             }
         }
 
