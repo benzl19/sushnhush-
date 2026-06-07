@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SushnHush - Secret Room</title>
+    <link rel="stylesheet" href="style-global.css">
+</head>
+<body>
+    <div class="container">
+        <div class="chat-room show-flex fade-in" id="chatRoom">
+            <div class="chat-header">
+                <button class="back-btn" id="btnBackToHub" onclick="kembaliKeHub()">←</button>
+                <div class="chat-title-area">
+                    <h3 class="chat-group-name" id="roomGroupName">Memuat...</h3>
+                    <div class="chat-status" id="roomStatus">...</div>
+                </div>
+                <div class="chat-secret-id" id="roomSecretId">ID: #...</div>
+            </div>
+            
+            <button class="btn-invite-link" id="btnInviteLink" onclick="salinLinkUndangan()"></button>
+            
+            <div class="chat-messages" id="messageContainer">
+                <div class="msg-system" id="systemMsgWelcome"></div>
+            </div>
+
+            <div class="chat-input-area">
+                <input type="text" id="chatInputBox" class="chat-input" placeholder="..." autocomplete="off" onkeypress="handleEnter(event)">
+                <button class="btn-send" onclick="kirimPesan()">➤</button>
+            </div>
+        </div>
+    </div>
+    <script src="app-global.js"></script>
+    <script>
+        let chatIntervalId = null;
+        let activeGroupId = localStorage.getItem('sush_activeGroup');
+
+        window.addEventListener('load', function() {
+            if (!localStorage.getItem('sush_curEmail') || !activeGroupId) {
+                if (typeof navigasiKeHalaman === 'function') {
+                    navigasiKeHalaman('beranda.html', 'slide-out-right');
+                } else {
+                    window.location.href = 'beranda.html';
+                }
+                return;
+            }
+            initChatRoom();
+        });
+
+        function initChatRoom() {
+            const lang = localStorage.getItem('sush_lang') || 'ID';
+            if (typeof kontenBahasa === 'undefined') return;
+            const data = kontenBahasa[lang];
+            if (!data) return;
+
+            document.getElementById('systemMsgWelcome').innerText = data.sysWelcome;
+            document.getElementById('btnInviteLink').innerText = data.btnCopyLink;
+            document.getElementById('chatInputBox').placeholder = lang === 'ID' ? 'Ketik pesan rahasia di sini...' : 'Type secret message here...';
+
+            urusRefreshChatManual();
+
+            const isLayarSembunyi = document.hidden;
+            const isKehilanganFokus = !document.hasFocus();
+
+            if (!isLayarSembunyi && !isKehilanganFokus) {
+                chatIntervalId = setInterval(urusRefreshChatManual, 3000);
+            }
+
+            document.addEventListener("visibilitychange", function() {
+                if (document.hidden && chatIntervalId) {
+                    clearInterval(chatIntervalId);
+                    chatIntervalId = null;
+                } else if (!document.hidden && !chatIntervalId && activeGroupId) {
+                    urusRefreshChatManual();
+                    chatIntervalId = setInterval(urusRefreshChatManual, 3000);
+                }
+            });
+        }
+
+        function kembaliKeHub() {
+            if(chatIntervalId) {
+                clearInterval(chatIntervalId);
+                chatIntervalId = null;
+            }
+            localStorage.removeItem('sush_activeGroup');
+            
+            if (typeof navigasiKeHalaman === 'function') {
+                navigasiKeHalaman('beranda.html', 'slide-out-right');
+            } else {
+                window.location.href = 'beranda.html';
+            }
+        }
+
+        async function salinLinkUndangan() {
+            if(!activeGroupId) return;
+            const lang = localStorage.getItem('sush_lang') || 'ID';
+            
+            try {
+                const safeId = activeGroupId.replace('#', '');
+                const urlGet = SUPABASE_URL + '/rest/v1/groups?id=eq.' + encodeURIComponent(safeId);
+                const res = await fetch(urlGet, { method: 'GET', headers: reqHeaders });
+                const data = await res.json();
+                
+                if (!data || data.length === 0) return;
+                
+                const groupName = data[0].name;
+                const rawData = groupName + '|' + safeId;
+                const encodedData = btoa(unescape(encodeURIComponent(rawData)));
+                const link = 'https://bit.ly/4uKqh7z?g=' + encodedData;
+                
+                navigator.clipboard.writeText(link);
+                alert(lang === 'ID' ? 'Link misterius berhasil disalin! Kirim ke sirkelmu secara rahasia.' : 'Mysterious link copied! Send to your circle secretly.');
+            } catch (err) {
+                alert('System Error: ' + err.message);
+            }
+        }
+
+        function urusRefreshChatManual() {
+            renderChatMessages();
+        }
+
+        async function renderChatMessages() {
+            if(!activeGroupId) return;
+            const lang = localStorage.getItem('sush_lang') || 'ID';
+            const data = kontenBahasa[lang];
+            const safeId = activeGroupId.replace('#', '');
+            
+            try {
+                const urlGroup = SUPABASE_URL + '/rest/v1/groups?id=eq.' + encodeURIComponent(safeId);
+                const resGroup = await fetch(urlGroup, { method: 'GET', headers: reqHeaders });
+                const groupData = await resGroup.json();
+                
+                if (!groupData || groupData.length === 0) return;
+                const g = groupData[0];
+                
+                document.getElementById('roomGroupName').innerText = g.name;
+                document.getElementById('roomSecretId').innerText = 'ID: #' + g.id;
+                document.getElementById('roomStatus').innerText = g.members.length + ' ' + (data ? data.groupMembers : 'Anggota'); 
+                
+                const inviteBtn = document.getElementById('btnInviteLink');
+                if (inviteBtn) {
+                    if (g.password === 'dm_active') {
+                        inviteBtn.style.display = 'none';
+                    } else {
+                        inviteBtn.style.display = 'block';
+                    }
+                }
+                
+                const container = document.getElementById('messageContainer');
+                const isScrolledToBottom = container.scrollHeight - container.clientHeight <= container.scrollTop + 10;
+                
+                let newHtml = '<div class="msg-system">' + (data ? data.sysWelcome : 'Obrolan dienkripsi.') + '</div>';
+                
+                const urlMsgs = SUPABASE_URL + '/rest/v1/messages?group_id=eq.' + encodeURIComponent(safeId);
+                const resMsgs = await fetch(urlMsgs, { method: 'GET', headers: reqHeaders });
+                const msgsData = await resMsgs.json();
+                
+                const now = new Date().getTime();
+                const myEmail = localStorage.getItem('sush_curEmail');
+                
+                msgsData.forEach(msg => {
+                    const msgTime = new Date(msg.created_at).getTime();
+                    const diffHours = (now - msgTime) / 3600000;
+                    if (diffHours >= 24) return;
+                    
+                    let statusTxt = data ? data.msgNew : 'Baru';
+                    let color = '#45f3ff';
+                    
+                    if(diffHours >= 9 && diffHours < 22) { 
+                        statusTxt = data ? data.msgAging : 'Lama'; 
+                        color = '#ffd700'; 
+                    } else if(diffHours >= 22) { 
+                        statusTxt = data ? data.msgFading : 'Pudar'; 
+                        color = '#ff4a4a'; 
+                    }
+                    
+                    const isMe = msg.sender_email === myEmail;
+                    const alignClass = isMe ? 'msg-me' : '';
+                    const bgStyle = isMe ? 'background: #45f3ff; color: #0b0c10;' : 'background: #1f2833; color: #c5c6c7; align-self: flex-start;';
+                    const borderRadius = isMe ? 'border-bottom-right-radius: 2px;' : 'border-bottom-left-radius: 2px;';
+                    
+                    newHtml += `
+                        <div class="msg-bubble ${alignClass}" style="${bgStyle} ${borderRadius}">
+                            <div style="font-size: 0.75rem; font-weight: bold; opacity: 0.8; margin-bottom: 3px;">${msg.sender_alias}</div>
+                            <div>${msg.text}</div>
+                            <div class="msg-lifespan" style="color: ${isMe ? '#0b0c10' : color};">${statusTxt}</div>
+                        </div>
+                    `;
+                });
+                
+                if (container.innerHTML !== newHtml) {
+                    container.innerHTML = newHtml;
+                    if (isScrolledToBottom) {
+                        container.scrollTop = container.scrollHeight;
+                    }
+                }
+                
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function handleEnter(e) { 
+            if(e.key === 'Enter') kirimPesan(); 
+        }
+
+        async function kirimPesan() {
+            const input = document.getElementById('chatInputBox'); 
+            const text = input.value.trim();
+            if(!text || !activeGroupId) return;
+            
+            const safeId = activeGroupId.replace('#', '');
+            const myEmail = localStorage.getItem('sush_curEmail');
+            const defaultAlias = localStorage.getItem('sush_curAlias') || 'Anon#XXXXXX';
+            const lang = localStorage.getItem('sush_lang') || 'ID';
+            const statusTxt = lang === 'ID' ? 'Baru' : 'New';
+            
+            const container = document.getElementById('messageContainer');
+            container.innerHTML += `
+                <div class="msg-bubble msg-me" style="background: #45f3ff; color: #0b0c10; border-bottom-right-radius: 2px;">
+                    <div style="font-size: 0.75rem; font-weight: bold; opacity: 0.8; margin-bottom: 3px;">${defaultAlias}</div>
+                    <div>${text}</div>
+                    <div class="msg-lifespan" style="color: #0b0c10;">${statusTxt}</div>
+                </div>
+            `;
+            container.scrollTop = container.scrollHeight;
+            input.value = ''; 
+
+            try {
+                const urlGroup = SUPABASE_URL + '/rest/v1/groups?id=eq.' + encodeURIComponent(safeId);
+                const resGroup = await fetch(urlGroup, { method: 'GET', headers: reqHeaders });
+                const groupData = await resGroup.json();
+                
+                if (!groupData || groupData.length === 0) return;
+                
+                const g = groupData[0];
+                const myMemberData = g.members.find(m => m.email === myEmail);
+                const alias = myMemberData ? myMemberData.alias : defaultAlias;
+                
+                const urlPost = SUPABASE_URL + '/rest/v1/messages';
+                const postHeaders = Object.assign({}, reqHeaders, { 'Prefer': 'return=representation' });
+                
+                await fetch(urlPost, {
+                    method: 'POST',
+                    headers: postHeaders,
+                    body: JSON.stringify({
+                        group_id: safeId,
+                        sender_email: myEmail,
+                        sender_alias: alias,
+                        text: text
+                    })
+                });
+                
+            } catch (err) {
+                console.error('System Error: ' + err.message);
+            }
+        }
+    </script>
+</body>
+</html>

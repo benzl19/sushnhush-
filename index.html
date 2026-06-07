@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SushnHush - Privacy First</title>
+    <link rel="stylesheet" href="style-global.css">
+</head>
+<body>
+    <div class="container">
+        <div class="landing-page" id="landingPage">
+            <button class="btn-back-gate" id="btnBackGate" onclick="mundurKeGerbang()">← Back</button>
+            <svg class="svg-logo-small" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <line x1="40" y1="20" x2="30" y2="80" class="shh-line" />
+                <line x1="60" y1="20" x2="50" y2="80" class="shh-line" />
+                <line x1="20" y1="50" x2="80" y2="50" class="shh-cross" />
+            </svg>
+            <h2 id="landingTitle"></h2>
+            
+            <div class="section-title" id="subTitle1"></div>
+            <div class="vibe-box"><p id="desc1"></p></div>
+            
+            <div class="section-title" id="subTitle2"></div>
+            <div class="vibe-box"><p id="desc2"></p></div>
+            
+            <div class="section-title" id="subTitle3"></div>
+            <ul class="feature-list" id="featureList"></ul>
+            
+            <div class="rules-box">
+                <h3 id="rulesTitle"></h3>
+                <ul id="rulesList"></ul>
+            </div>
+            
+            <button class="btn-next" id="btnToAuth" onclick="majuKeAuth()"></button>
+        </div>
+    </div>
+    <script src="app-global.js"></script>
+    <script>
+        window.addEventListener('load', function() {
+            const lang = localStorage.getItem('sush_lang') || 'ID';
+            if (typeof kontenBahasa === 'undefined') return;
+            const data = kontenBahasa[lang];
+            
+            if (!data) return;
+
+            document.getElementById('landingTitle').innerText = data.title; 
+            document.getElementById('subTitle1').innerText = data.subTitle1; 
+            document.getElementById('desc1').innerHTML = data.desc1;
+            document.getElementById('subTitle2').innerText = data.subTitle2; 
+            document.getElementById('desc2').innerHTML = data.desc2; 
+            document.getElementById('subTitle3').innerText = data.subTitle3;
+            document.getElementById('rulesTitle').innerText = data.rulesTitle; 
+            document.getElementById('btnToAuth').innerText = data.btnText;
+            document.getElementById('btnBackGate').innerText = data.btnBack;
+            document.getElementById('featureList').innerHTML = data.features.map(f => `<li>${f}</li>`).join(''); 
+            document.getElementById('rulesList').innerHTML = data.rules.map(r => `<li>${r}</li>`).join('');
+        });
+
+        function mundurKeGerbang() {
+            if (typeof navigasiKeHalaman === 'function') {
+                navigasiKeHalaman('languages.html', 'slide-out-right');
+            } else {
+                window.location.href = 'languages.html';
+            }
+        }
+
+        function majuKeAuth() {
+            if (typeof navigasiKeHalaman === 'function') {
+                navigasiKeHalaman('auth.html', 'slide-out-left');
+            } else {
+                window.location.href = 'auth.html';
+            }
+        }
+    </script>
+</body>
+</html>

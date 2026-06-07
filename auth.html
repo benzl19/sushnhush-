@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SushnHush - Authentication</title>
+    <link rel="stylesheet" href="style-global.css">
+</head>
+<body>
+    <div class="container">
+        <div class="auth-gate" id="authGate">
+            <svg class="svg-logo-small" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <line x1="40" y1="20" x2="30" y2="80" class="shh-line" />
+                <line x1="60" y1="20" x2="50" y2="80" class="shh-line" />
+                <line x1="20" y1="50" x2="80" y2="50" class="shh-cross" />
+            </svg>
+            <div class="auth-tabs">
+                <button class="tab-btn active" id="tabLogin" onclick="switchTab('login')"></button>
+                <button class="tab-btn" id="tabRegister" onclick="switchTab('register')"></button>
+            </div>
+            <div id="formLogin" class="show-node">
+                <input type="text" id="loginUser" class="input-field">
+                <div class="password-wrapper">
+                    <input type="password" id="loginPass" class="input-field" autocomplete="current-password">
+                    <button type="button" class="toggle-pass" onclick="togglePassword('loginPass', this)"></button>
+                </div>
+                <button class="btn-submit" id="btnLoginSubmit" onclick="simulasiLogin()"></button>
+                <p class="forgot-link" id="loginForgot" onclick="trigger3Blok()"></p>
+            </div>
+            <div id="formRegister" class="hide-node">
+                <input type="text" id="regUser" class="input-field" autocomplete="off" oninput="cekPassword()">
+                <p class="error-text" id="userTakenText"></p>
+                <input type="email" id="regEmail" class="input-field" autocomplete="email" oninput="cekPassword()">
+                <div class="password-wrapper">
+                    <input type="password" id="regPass" class="input-field" autocomplete="new-password" oninput="cekPassword()">
+                    <button type="button" class="toggle-pass" onclick="togglePassword('regPass', this)"></button>
+                </div>
+                <div class="password-wrapper">
+                    <input type="password" id="regPassConfirm" class="input-field" autocomplete="new-password" oninput="cekPassword()">
+                    <button type="button" class="toggle-pass" onclick="togglePassword('regPassConfirm', this)"></button>
+                </div>
+                <p class="error-text" id="passMismatchText"></p>
+                <p class="helper-text" id="passHelperText"></p>
+                <div class="divider-text" id="reg3BlockTitle"></div>
+                <input type="text" id="regQ" class="input-field" autocomplete="off">
+                <input type="text" id="regClue" class="input-field" autocomplete="off">
+                <input type="password" id="regAns" class="input-field" autocomplete="off">
+                <button class="btn-submit" id="btnRegSubmit" onclick="simulasiRegister()" disabled></button>
+            </div>
+        </div>
+    </div>
+    <script src="app-global.js"></script>
+    <script>
+        window.addEventListener('load', function() {
+            const lang = localStorage.getItem('sush_lang') || 'ID';
+            if (typeof kontenBahasa === 'undefined') return;
+            const data = kontenBahasa[lang];
+            if (!data) return;
+
+            document.getElementById('tabLogin').innerText = data.tabL; 
+            document.getElementById('tabRegister').innerText = data.tabR;
+            document.getElementById('loginUser').placeholder = data.loginUserPlaceholder; 
+            document.getElementById('loginPass').placeholder = data.loginPassPlaceholder;
+            document.getElementById('btnLoginSubmit').innerText = data.loginSubmit; 
+            document.getElementById('loginForgot').innerText = data.loginForgot;
+            document.getElementById('regUser').placeholder = data.regUserPlaceholder; 
+            document.getElementById('regEmail').placeholder = data.regEmailPlaceholder;
+            document.getElementById('regPass').placeholder = data.regPassPlaceholder; 
+            document.getElementById('regPassConfirm').placeholder = lang === 'ID' ? 'Ulangi Password...' : 'Repeat Password...';
+            document.getElementById('passHelperText').innerText = data.passHelper; 
+            document.getElementById('reg3BlockTitle').innerText = data.reg3BlockTitle;
+            document.getElementById('regQ').placeholder = data.regQPlaceholder; 
+            document.getElementById('regClue').placeholder = data.regCluePlaceholder;
+            document.getElementById('regAns').placeholder = data.regAnsPlaceholder; 
+            document.getElementById('btnRegSubmit').innerText = data.regSubmit;
+            document.getElementById('userTakenText').innerText = data.userTaken;
+
+            const btnsToggle = document.querySelectorAll('.toggle-pass');
+            btnsToggle.forEach(b => { b.innerText = data.passShow; });
+        });
+
+        function switchTab(tab) {
+            const loginForm = document.getElementById('formLogin'); 
+            const regForm = document.getElementById('formRegister');
+            const tabL = document.getElementById('tabLogin'); 
+            const tabR = document.getElementById('tabRegister');
+            if (tab === 'login') { 
+                loginForm.classList.replace('hide-node', 'show-node'); 
+                regForm.classList.replace('show-node', 'hide-node'); 
+                tabL.classList.add('active'); 
+                tabR.classList.remove('active'); 
+            } else { 
+                regForm.classList.replace('hide-node', 'show-node'); 
+                loginForm.classList.replace('show-node', 'hide-node'); 
+                tabR.classList.add('active'); 
+                tabL.classList.remove('active'); 
+                cekPassword();
+            }
+        }
+
+        function togglePassword(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const lang = localStorage.getItem('sush_lang') || 'ID';
+            if (typeof kontenBahasa === 'undefined') return;
+            const data = kontenBahasa[lang];
+            if (input.type === 'password') { 
+                input.type = 'text'; 
+                btn.innerText = data.passHide; 
+            } else { 
+                input.type = 'password'; 
+                btn.innerText = data.passShow; 
+            }
+        }
+        function cekPassword() {
+            const user = document.getElementById('regUser').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const p1 = document.getElementById('regPass').value;
+            const p2 = document.getElementById('regPassConfirm').value;
+            const err = document.getElementById('passMismatchText');
+            const btn = document.getElementById('btnRegSubmit');
+            const lang = localStorage.getItem('sush_lang') || 'ID';
+            
+            if (p2 === "") { err.style.display = 'none'; btn.disabled = true; return; }
+            if (p1 !== p2) { 
+                err.innerText = lang === 'ID' ? 'Password tidak sama!' : 'Passwords do not match!';
+                err.style.display = 'block'; btn.disabled = true; 
+            } else { 
+                err.style.display = 'none'; 
+                if(user !== "" && email !== "" && p1.length >= 6) { btn.disabled = false; } else { btn.disabled = true; }
+            }
+        }
+
+        const anonNouns = [
+            "Panda", "Fox", "Wolf", "Raven", "Viper", "Owl", "Shark", "Falcon", "Panther", "Cobra",
+            "Jaguar", "Lynx", "Leopard", "Cheetah", "Badger", "Coyote", "Condor", "Python", "Mamba", "Raptor",
+            "Scorpion", "Spider", "Wombat", "Ferret", "Otter", "Weasel", "Ocelot", "Orca", "Mantis", "Grizzly", "Zeus", "Poseidon", "Hades", "Apollo", "Ares", "Hermes", "Hephaestus", "Dionysus", "Odin", "Thor", "Loki", "Anubis", "Osiris", "Ra", "Horus", "Artemis", "Athena", "Aphrodite", "Hera", "Achilles", "Hercules", "Perseus", "Spartacus", "Caesar", "Augustus", "Nero", "Caligula", "Romulus", "Remus", "Alexander", "Hannibal", "Joker", "King", "Queen", "Jack", "Ace", "Spade", "Heart", "Diamond", "Club", "Medusa", "Griffin", "Phoenix", "Gargoyle", "Hydra", "Siren", "Gorgon", "Kraken", "Pegasus", "Centaur", "Cyclops", "Titan", "Valkyrie", "Sphinx", "Minotaur", "Yeti", "Bigfoot", "Chimera", "Banshee", "Wendigo"
+        ];
+
+        function generateSecretPin() {
+            const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; 
+            let result = "";
+            for (let i = 0; i < 6; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+
+        async function simulasiRegister() {
+            const userValue = document.getElementById('regUser').value.trim(); 
+            const emailValue = document.getElementById('regEmail').value.trim(); 
+            const passValue = document.getElementById('regPass').value;
+            const passwordPattern = /^(?=.*[a-zA-Z])(?=.*\d).{6,}$/; 
+            const invalidUserPattern = /[@]/;
+            const lang = localStorage.getItem('sush_lang') || 'ID';
+            
+            const errUserTaken = document.getElementById('userTakenText');
+            if (errUserTaken) errUserTaken.style.display = 'none';
+            
+            if(!userValue || !emailValue) {
+                alert(lang === 'ID' ? "Username dan Email wajib diisi!" : "Username and Email are required!");
+                return;
+            }
+
+            if (invalidUserPattern.test(userValue)) {
+                alert(lang === 'ID' ? "Akses Ditolak: Username tidak boleh mengandung simbol '@' atau menyerupai format email!" : "Access Denied: Username must not contain the '@' symbol or resemble an email format!");
+                return;
+            }
+            
+            if (!passwordPattern.test(passValue)) {
+                alert(lang === 'ID' ? "Akses Ditolak: Password harus terdiri dari minimal 6 karakter dan merupakan gabungan huruf serta angka!" : "Access Denied: Password must be at least 6 characters and contain both letters and numbers!");
+                return;
+            }
+            
+            try {
+                const urlCekUser = SUPABASE_URL + '/rest/v1/users?username=eq.' + encodeURIComponent(userValue);
+                const resCekUser = await fetch(urlCekUser, { method: 'GET', headers: reqHeaders });
+                const dataCekUser = await resCekUser.json();
+                
+                if (dataCekUser && dataCekUser.length > 0) {
+                    if (errUserTaken) errUserTaken.style.display = 'block';
+                    return;
+                }
+
+                const urlCek = SUPABASE_URL + '/rest/v1/users?email=eq.' + encodeURIComponent(emailValue);
+                const resCek = await fetch(urlCek, { method: 'GET', headers: reqHeaders });
+                const dataCek = await resCek.json();
+                
+                if (dataCek && dataCek.length > 0) {
+                    alert(lang === 'ID' ? "Akses Ditolak: Email ini sudah terdaftar di sistem SUSHNHUSH!" : "Access Denied: This email is already registered!");
+                    return;
+                }
+                
+                const newAlias = `${anonNouns[Math.floor(Math.random() * anonNouns.length)]}#${generateSecretPin()}`;
+                
+                const urlPost = SUPABASE_URL + '/rest/v1/users';
+                const postHeaders = Object.assign({}, reqHeaders, { 'Prefer': 'return=representation' });
+                const resPost = await fetch(urlPost, {
+                    method: 'POST',
+                    headers: postHeaders,
+                    body: JSON.stringify({ username: userValue, email: emailValue, global_alias: newAlias, password: passValue })
+                });
+                
+                if (!resPost.ok) {
+                    const errObj = await resPost.json();
+                    alert("System Error: " + errObj.message);
+                    return;
+                }
+                
+                localStorage.setItem('sush_curUser', userValue); 
+                localStorage.setItem('sush_curEmail', emailValue); 
+                localStorage.setItem('sush_curAlias', newAlias);
+                
+                if (lang === 'ID') {
+                    alert(`Registrasi Berhasil\n\nAkun Anda telah dibuat. Sistem mengacak nama samaran Anda menjadi: ${newAlias}`);
+                } else {
+                    alert(`Registration Successful\n\nAccount created. System randomized your alias to: ${newAlias}`);
+                }
+                
+                if (typeof navigasiKeHalaman === 'function') {
+                    navigasiKeHalaman('beranda.html', 'slide-out-left');
+                } else {
+                    window.location.href = 'beranda.html';
+                }
+                
+            } catch (err) {
+                alert(lang === 'ID' ? "Koneksi ke server gagal: " + err.message : "Failed to connect to server: " + err.message);
+            }
+        }
+        async function simulasiLogin() {
+            const loginVal = document.getElementById('loginUser').value.trim();
+            const passVal = document.getElementById('loginPass').value; 
+            const lang = localStorage.getItem('sush_lang') || 'ID';
+            
+            if(!loginVal || !passVal) {
+                alert(lang === 'ID' ? 'Username/Email dan Password wajib diisi!' : 'Username/Email and Password are required!');
+                return;
+            }
+
+            try {
+                const urlGet = SUPABASE_URL + '/rest/v1/users?or=(email.eq.' + encodeURIComponent(loginVal) + ',username.eq.' + encodeURIComponent(loginVal) + ')';
+                const res = await fetch(urlGet, { method: 'GET', headers: reqHeaders });
+                const data = await res.json();
+                
+                if (!data || data.length === 0) {
+                    alert(lang === 'ID' ? 'Akses Ditolak: Kredensial tidak dikenali di sistem!' : 'Access Denied: Unrecognized Credentials!');
+                    return;
+                }
+                
+                if (data[0].password !== passVal) {
+                    alert(lang === 'ID' ? 'Akses Ditolak: Password yang Anda masukkan salah!' : 'Access Denied: Incorrect Password!');
+                    return;
+                }
+                
+                localStorage.setItem('sush_curUser', data[0].username || 'Member'); 
+                localStorage.setItem('sush_curEmail', data[0].email);
+                localStorage.setItem('sush_curAlias', data[0].global_alias);
+                
+                if (lang === 'ID') {
+                    alert(`Mencocokkan kredensial dengan database...\nBerhasil masuk ke SUSHNHUSH!`);
+                } else {
+                    alert(`Matching credentials with database...\nSuccessfully entered SUSHNHUSH!`);
+                }
+                
+                if (typeof navigasiKeHalaman === 'function') {
+                    navigasiKeHalaman('beranda.html', 'slide-out-left');
+                } else {
+                    window.location.href = 'beranda.html';
+                }
+            } catch (err) {
+                alert('System Error: ' + err.message);
+            }
+        }
+
+        function trigger3Blok() {
+            const lang = localStorage.getItem('sush_lang') || 'ID';
+            const inputUser = prompt(lang === 'ID' ? "Masukkan Email/Username terdaftar:" : "Enter your registered Email/Username:");
+            if (!inputUser) return;
+            alert(lang === 'ID' ? `[PROSES PEMULIHAN 3 BLOK AKTIF] \n\nSistem menampilkan Pertanyaan Rahasia & Clue buatanmu sendiri. \n\n[Skenario Sukses]: Jika Jawaban cocok, link reset otomatis terkirim via Email Service Gratisan (Brevo/Resend)!` : `[3-BLOCK RECOVERY ACTIVE] \n\nSystem fetches your unique Secret Question & Clue. \n\n[Success Scenario]: If the Answer matches, a reset link will be sent via Free Email Service!`);
+        }
+    </script>
+</body>
+</html>
