@@ -1,4 +1,4 @@
-l<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -24,9 +24,9 @@ l<!DOCTYPE html>
         function pilihBahasaSistem(lang) {
             localStorage.setItem('sush_lang', lang);
             if (typeof navigasiKeHalaman === 'function') {
-                navigasiKeHalaman('index.html', 'slide-out-left');
+                navigasiKeHalaman('landing-pages.html', 'slide-out-left');
             } else {
-                window.location.href = 'index.html';
+                window.location.href = 'landing-pages.html';
             }
         }
     </script>
