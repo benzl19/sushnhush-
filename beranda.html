@@ -566,33 +566,67 @@
                         if (g.password !== 'dm_pending' && g.password !== 'dm_active' && g.members && g.members.find(m => m.email === myEmail)) {
                             if (g.pending_votes && g.pending_votes.length > 0) {
                                 g.pending_votes.forEach(pv => {
-                                    const vBy = pv.voted_by || [];
-                                    const rBy = pv.rejected_by || [];
-                                    
-                                    if (!vBy.includes(myEmail) && !rBy.includes(myEmail)) {
-                                        hasNotif = true;
-                                        const namaCalonClean = pv.alias.split('#')[0];
-                                        const txt = lang === 'ID' ? `Izinkan <strong>${namaCalonClean}</strong> bergabung ke <strong>${g.name}</strong>?` : `Allow <strong>${namaCalonClean}</strong> to join <strong>${g.name}</strong>?`;
-                                        const btnAcc = lang === 'ID' ? 'TERIMA' : 'ACCEPT';
-                                        const btnRej = lang === 'ID' ? 'TOLAK' : 'REJECT';
+                                    if (!pv.type || pv.type === 'join') {
+                                        const vBy = pv.voted_by || [];
+                                        const rBy = pv.rejected_by || [];
+                                        
+                                        if (!vBy.includes(myEmail) && !rBy.includes(myEmail)) {
+                                            hasNotif = true;
+                                            const namaCalonClean = pv.alias.split('#')[0];
+                                            const txt = lang === 'ID' ? `Izinkan <strong>${namaCalonClean}</strong> bergabung ke <strong>${g.name}</strong>?` : `Allow <strong>${namaCalonClean}</strong> to join <strong>${g.name}</strong>?`;
+                                            const btnAcc = lang === 'ID' ? 'TERIMA' : 'ACCEPT';
+                                            const btnRej = lang === 'ID' ? 'TOLAK' : 'REJECT';
 
-                                        html += `
-                                            <div class="notif-item" style="margin-bottom: 10px;">
-                                                <div class="notif-text">${txt}</div>
-                                                <div class="notif-bars">
-                                                    <div class="notif-btns">
-                                                        <button class="btn-notif-accept" onclick="prosesVote('${pv.email}', '${g.id}', true)">${btnAcc}</button>
-                                                        <button class="btn-notif-reject" onclick="prosesVote('${pv.email}', '${g.id}', false)">${btnRej}</button>
+                                            html += `
+                                                <div class="notif-item" style="margin-bottom: 10px;">
+                                                    <div class="notif-text">${txt}</div>
+                                                    <div class="notif-bars">
+                                                        <div class="notif-btns">
+                                                            <button class="btn-notif-accept" onclick="prosesVote('${pv.email}', '${g.id}', true)">${btnAcc}</button>
+                                                            <button class="btn-notif-reject" onclick="prosesVote('${pv.email}', '${g.id}', false)">${btnRej}</button>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        `;
+                                            `;
+                                        }
+                                    }
+                                });
+
+                                g.pending_votes.forEach(pv => {
+                                    if (pv.type === 'exile') {
+                                        const vBy = pv.voted_by || [];
+                                        const rBy = pv.rejected_by || [];
+                                        
+                                        if (!vBy.includes(myEmail) && !rBy.includes(myEmail)) {
+                                            hasNotif = true;
+                                            const txtExileVote = kontenBahasa[lang].lblExileVote || 'ingin mengeluarkan';
+                                            const txtExileFrom = kontenBahasa[lang].lblExileFrom || 'dari grup';
+                                            const btnAcc = lang === 'ID' ? 'TERIMA' : 'ACCEPT';
+                                            const btnRej = lang === 'ID' ? 'TOLAK' : 'REJECT';
+                                            
+                                            const namaPemicuClean = pv.triggered_by_alias.split('#')[0];
+                                            const namaTargetClean = pv.target_alias.split('#')[0];
+                                            const kalimatSopan = `<strong>${namaPemicuClean}</strong> ${txtExileVote} <strong>${namaTargetClean}</strong> ${txtExileFrom} <strong>${g.name}</strong>.`;
+
+                                            html += `
+                                                <div class="notif-item" style="margin-bottom: 10px;">
+                                                    <div class="notif-text">${kalimatSopan}</div>
+                                                    <div class="notif-bars">
+                                                        <div class="notif-btns">
+                                                            <button class="btn-notif-accept" onclick="prosesVoteExile('${pv.target_email}', '${g.id}', true)">${btnAcc}</button>
+                                                            <button class="btn-notif-reject" onclick="prosesVoteExile('${pv.target_email}', '${g.id}', false)">${btnRej}</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            `;
+                                        }
                                     }
                                 });
                             }
                         }
                     });
                 }
+
                 
                 if (listContainer) {
                     if (html === '') {
@@ -859,6 +893,30 @@
             }
         }
 
+        async function prosesVoteExile(targetEmail, roomId, setuju) {
+            try {
+                const myEmail = localStorage.getItem('sush_curEmail');
+                const urlRpc = SUPABASE_URL + '/rest/v1/rpc/rpc_proses_vote_exile';
+                
+                const response = await fetch(urlRpc, {
+                    method: 'POST',
+                    headers: reqHeaders,
+                    body: JSON.stringify({
+                        p_group_id: roomId,
+                        p_target_email: targetEmail,
+                        p_voter_email: myEmail,
+                        p_is_setuju: setuju
+                    })
+                });
+
+                if (!response.ok) throw new Error('RPC exile endpoint failed.');
+                cekSemuaNotifikasi();
+                renderHubList();
+            } catch (err) {
+                console.error('Exile Vote Error: ' + err.message);
+            }
+        }
+            
         async function aksiPermintaan(roomId, tipe) {
             const lang = localStorage.getItem('sush_lang') || 'ID';
             toggleMenuPanel('notif'); 
