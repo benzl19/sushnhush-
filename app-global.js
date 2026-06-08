@@ -1,13 +1,13 @@
-const SUPABASE_URL = 'https://zyqqywdobpkyhmzcrlws.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_phKP0N4tOOkrVKr4lyQZHw_T9cqh9Bk';
+var SUPABASE_URL = 'https://zyqqywdobpkyhmzcrlws.supabase.co';
+var SUPABASE_KEY = 'sb_publishable_phKP0N4tOOkrVKr4lyQZHw_T9cqh9Bk';
 
-const reqHeaders = {
+var reqHeaders = {
     'apikey': SUPABASE_KEY,
     'Authorization': 'Bearer ' + SUPABASE_KEY,
     'Content-Type': 'application/json'
 };
 
-const kontenBahasa = {
+var kontenBahasa = {
     'ID': {
         title: 'Selamat Datang di SUSHNHUSH',
         subTitle1: 'Apa itu SUSHNHUSH?',
@@ -78,25 +78,26 @@ const kontenBahasa = {
     }
 };
 
-let notifIntervalId = null;
-let chatIntervalId = null;
-let activeGroupId = null;
-let currentActiveMenu = null;
+var notifIntervalId = null;
+var chatIntervalId = null;
+var activeGroupId = null;
+var currentActiveMenu = null;
 
-const anonNouns = [
+var anonNouns = [
     "Panda", "Fox", "Wolf", "Raven", "Viper", "Owl", "Shark", "Falcon", "Panther", "Cobra",
     "Jaguar", "Lynx", "Leopard", "Cheetah", "Badger", "Coyote", "Condor", "Python", "Mamba", "Raptor",
     "Scorpion", "Spider", "Wombat", "Ferret", "Otter", "Weasel", "Ocelot", "Orca", "Mantis", "Grizzly", "Zeus", "Poseidon", "Hades", "Apollo", "Ares", "Hermes", "Hephaestus", "Dionysus", "Odin", "Thor", "Loki", "Anubis", "Osiris", "Ra", "Horus", "Artemis", "Athena", "Aphrodite", "Hera", "Achilles", "Hercules", "Perseus", "Spartacus", "Caesar", "Augustus", "Nero", "Caligula", "Romulus", "Remus", "Alexander", "Hannibal", "Joker", "King", "Queen", "Jack", "Ace", "Spade", "Heart", "Diamond", "Club", "Medusa", "Griffin", "Phoenix", "Gargoyle", "Hydra", "Siren", "Gorgon", "Kraken", "Pegasus", "Centaur", "Cyclops", "Titan", "Valkyrie", "Sphinx", "Minotaur", "Yeti", "Bigfoot", "Chimera", "Banshee", "Wendigo"
 ];
 
 function generateSecretPin() {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    let result = "";
-    for (let i = 0; i < 6; i++) {
+    var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    var result = "";
+    for (var i = 0; i < 6; i++) {
         result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return result;
 }
+
 function navigasiKeHalaman(targetUrl, jenisTransisi) {
     document.body.classList.add(jenisTransisi);
     setTimeout(() => {
@@ -165,11 +166,5 @@ window.addEventListener('load', function() {
     document.addEventListener("visibilitychange", kendaliDetakJantungAplikasi);
     window.addEventListener("focus", kendaliDetakJantungAplikasi);
     window.addEventListener("blur", kendaliDetakJantungAplikasi);
-    
-    const currentPath = window.location.pathname;
-    const isPublicPage = currentPath.endsWith('bahasa.html') || currentPath.endsWith('index.html') || currentPath.endsWith('auth.html') || currentPath.endsWith('/');
-    
-    if (localStorage.getItem('sush_curEmail') && isPublicPage) {
-        navigasiKeHalaman('beranda.html', 'slide-out-left');
-    }
 });
+    
