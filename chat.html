@@ -12,10 +12,16 @@
             <div class="chat-header">
                 <button class="back-btn" id="btnBackToHub" onclick="kembaliKeHub()">←</button>
                 <div class="chat-title-area">
-                    <h3 class="chat-group-name" id="roomGroupName">Memuat...</h3>
+                    <h3 class="chat-group-name" id="roomGroupName" onclick="toggleGroupMenuPanel()" style="cursor:pointer; text-decoration:underline; text-decoration-style:dashed;">Memuat...</h3>
                     <div class="chat-status" id="roomStatus">...</div>
                 </div>
                 <div class="chat-secret-id" id="roomSecretId">ID: #...</div>
+            </div>
+    
+            <div class="roll-down-panel" id="groupDropdown">
+                <div class="roll-down-content" id="groupDropdownContent">
+                    <div id="memberListContainer"></div>
+                </div>
             </div>
             
             <button class="btn-invite-link" id="btnInviteLink" onclick="salinLinkUndangan()"></button>
