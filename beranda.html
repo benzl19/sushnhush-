@@ -8,7 +8,7 @@
 </head>
 <body>
     <div class="container">
-        <div class="main-hub show-flex fade-in" id="mainHub">
+        <div class="main-hub show-flex fade-in" id="mainHub" style="display: flex; opacity: 1; transform: translateX(0);">
             <div class="hub-header">
                 <h2 class="hub-title" onclick="if(typeof toggleMenuPanel === 'function') toggleMenuPanel('notif')">
                     <svg class="svg-logo-hub" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
@@ -18,6 +18,7 @@
                     </svg>
                     <span>SUSHNHUSH</span><span id="titleBadge" class="neon-dot" style="display:none; margin-left:2px;">°</span>
                 </h2>
+                
                 <div class="hub-nav-group">
                     <button class="nav-btn" id="navBtnProfile" onclick="if(typeof toggleMenuPanel === 'function') toggleMenuPanel('profile')"></button>
                     <button class="nav-btn" id="navBtnList" onclick="if(typeof toggleMenuPanel === 'function') toggleMenuPanel('list')"></button>
@@ -25,33 +26,62 @@
                     <button class="btn-logout" id="btnLogout" onclick="logoutSistem()"></button>
                 </div>
             </div>
+
             <div class="roll-down-panel" id="universalDropdown">
                 <div class="roll-down-content" id="universalDropdownContent"></div>
             </div>
+
             <div class="section-title" style="margin-bottom: 15px;" id="titleRiwayat"></div>
+            
             <div class="chat-list" id="hubChatList">
                 <div class="empty-state" id="emptyChatText"></div>
             </div>
         </div>
+    </div> 
+
+    <div class="modal-overlay" id="modalCreate">
+        <div class="modal-box">
+            <h3 class="modal-title" id="mCreateTitle"></h3>
+            <p class="modal-text" id="mCreateDesc"></p>
+            <input type="text" id="groupNameInput" class="input-field" placeholder="Nama Grup (Maks 15 Karakter)..." maxlength="15" autocomplete="off">
+            <input type="password" id="groupPassInput" class="input-field" placeholder="Password Masuk Grup..." autocomplete="new-password">
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="tutupModal('modalCreate')" id="mCreateCancel"></button>
+                <button class="btn-confirm" onclick="prosesBuatGrup()" id="mCreateConfirm"></button>
+            </div>
+        </div>
     </div>
+
+    <div class="modal-overlay" id="modalJoin">
+        <div class="modal-box">
+            <h3 class="modal-title" id="mJoinTitle"></h3>
+            <p class="modal-text" id="mJoinDesc"></p>
+            <input type="password" id="joinPassInput" class="input-field" placeholder="Password Grup..." autocomplete="new-password">
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="tutupModal('modalJoin')" id="mJoinCancel"></button>
+                <button class="btn-confirm" onclick="prosesKetukPintu('ya')" id="mJoinConfirm"></button>
+            </div>
+        </div>
+    </div>
+
     <script src="app-global.js"></script>
-    <script>
+        <script>
         window.addEventListener('load', function() {
             if (!localStorage.getItem('sush_curEmail')) {
-                if (typeof navigasiKeHalaman === 'function') {
-                    navigasiKeHalaman('languages.html', 'slide-out-right');
-                } else {
-                    window.location.href = 'languages.html';
-                }
+                window.location.href = 'index.html';
                 return;
             }
             initBeranda();
         });
 
         function initBeranda() {
-            const lang = localStorage.getItem('sush_lang') || 'ID'; 
-            if (typeof kontenBahasa === 'undefined') return;
-            const data = kontenBahasa[lang];
+            var lang = localStorage.getItem('sush_lang');
+            if (!lang || (lang !== 'ID' && lang !== 'EN')) { 
+                lang = 'ID'; 
+                localStorage.setItem('sush_lang', 'ID'); 
+            }
+            
+            var data = kontenBahasa[lang];
             if (!data) return;
             
             document.getElementById('navBtnProfile').innerText = data.navProfile;
@@ -59,6 +89,15 @@
             document.getElementById('btnLogout').innerText = data.navNavBtnLogout;
             document.getElementById('titleRiwayat').innerText = data.hubHistoryTitle; 
             document.getElementById('emptyChatText').innerText = data.hubEmptyChat;
+            
+            document.getElementById('mCreateTitle').innerText = data.mCreateTitle;
+            document.getElementById('mCreateDesc').innerText = data.mCreateDesc;
+            document.getElementById('mCreateCancel').innerText = data.mCreateCancel;
+            document.getElementById('mCreateConfirm').innerText = data.mCreateConfirm;
+            document.getElementById('mJoinTitle').innerText = data.mJoinTitle;
+            document.getElementById('mJoinDesc').innerText = data.mJoinDesc;
+            document.getElementById('mJoinCancel').innerText = data.mJoinCancel;
+            document.getElementById('mJoinConfirm').innerText = data.mJoinConfirm;
 
             currentActiveMenu = null;
             const dropdown = document.getElementById('universalDropdown');
@@ -72,44 +111,20 @@
             const purgeEndpointUrl = SUPABASE_URL + '/rest/v1/messages?created_at=lt.' + encodeURIComponent(boundaryISOString);
             fetch(purgeEndpointUrl, { method: 'DELETE', headers: reqHeaders }).catch(err => console.error(err));
 
-            if (typeof renderHubList === "function") {
-                renderHubList();
-            }
-            if(chatIntervalId) {
-                clearInterval(chatIntervalId);
-                chatIntervalId = null;
-            }
-            if (typeof cekSemuaNotifikasi === "function") {
-                cekSemuaNotifikasi();
-                if(notifIntervalId) clearInterval(notifIntervalId);
-                notifIntervalId = setInterval(cekSemuaNotifikasi, 30000);
-            }
+            renderHubList();
+            
+            cekSemuaNotifikasi();
+            if(typeof notifIntervalId !== 'undefined' && notifIntervalId) clearInterval(notifIntervalId);
+            notifIntervalId = setInterval(cekSemuaNotifikasi, 30000);
         }
 
         function logoutSistem() { 
-            if(notifIntervalId) {
-                clearInterval(notifIntervalId);
-                notifIntervalId = null;
-            }
-            if(chatIntervalId) {
-                clearInterval(chatIntervalId);
-                chatIntervalId = null;
-            }
-            const dropdown = document.getElementById('universalDropdown');
-            if (dropdown) {
-                dropdown.style.maxHeight = '0';
-                dropdown.classList.remove('active');
-            }
-            currentActiveMenu = null;
+            if(typeof notifIntervalId !== 'undefined' && notifIntervalId) clearInterval(notifIntervalId);
+            if(typeof chatIntervalId !== 'undefined' && chatIntervalId) clearInterval(chatIntervalId);
             localStorage.removeItem('sush_curUser'); 
             localStorage.removeItem('sush_curEmail'); 
             localStorage.removeItem('sush_curAlias');
-            
-            if (typeof navigasiKeHalaman === 'function') {
-                navigasiKeHalaman('languages.html', 'slide-out-right');
-            } else {
-                window.location.href = 'languages.html';
-            }
+            window.location.href = 'index.html';
         }
 
         function bukaModal(id) { 
@@ -128,7 +143,15 @@
             if(jInput) jInput.value = ''; 
         }
 
-        async function simulasiCariGrup() { 
+        function bukaChatRoom(id) {
+            localStorage.setItem('sush_activeGroup', id);
+            if (typeof navigasiKeHalaman === 'function') {
+                navigasiKeHalaman('chat.html', 'slide-out-left');
+            } else {
+                window.location.href = 'chat.html';
+            }
+        }
+                    async function simulasiCariGrup() { 
             let searchVal = document.getElementById('searchSecretId');
             if(!searchVal) return;
             searchVal = searchVal.value.trim();
@@ -251,30 +274,7 @@
                 alert('System Error: ' + err.message);
             }
         }
-    <div class="modal-overlay" id="modalCreate">
-        <div class="modal-box">
-            <h3 class="modal-title" id="mCreateTitle"></h3>
-            <p class="modal-text" id="mCreateDesc"></p>
-            <input type="text" id="groupNameInput" class="input-field" placeholder="Nama Grup (Maks 15 Karakter)..." maxlength="15" autocomplete="off">
-            <input type="password" id="groupPassInput" class="input-field" placeholder="Password Masuk Grup..." autocomplete="new-password">
-            <div class="modal-actions">
-                <button class="btn-cancel" onclick="tutupModal('modalCreate')" id="mCreateCancel"></button>
-                <button class="btn-confirm" onclick="prosesBuatGrup()" id="mCreateConfirm"></button>
-            </div>
-        </div>
-    </div>
 
-    <div class="modal-overlay" id="modalJoin">
-        <div class="modal-box">
-            <h3 class="modal-title" id="mJoinTitle"></h3>
-            <p class="modal-text" id="mJoinDesc"></p>
-            <input type="password" id="joinPassInput" class="input-field" placeholder="Password Grup..." autocomplete="new-password">
-            <div class="modal-actions">
-                <button class="btn-cancel" onclick="tutupModal('modalJoin')" id="mJoinCancel"></button>
-                <button class="btn-confirm" onclick="prosesKetukPintu()" id="mJoinConfirm"></button>
-            </div>
-        </div>
-    </div>
         async function prosesBuatGrup() {
             const groupName = document.getElementById('groupNameInput').value.trim(); 
             const groupPass = document.getElementById('groupPassInput').value;
@@ -390,6 +390,7 @@
         async function prosesVote(targetEmail, roomId, setuju) {
             try {
                 const myEmail = localStorage.getItem('sush_curEmail');
+                
                 const urlRpc = SUPABASE_URL + '/rest/v1/rpc/rpc_proses_vote';
                 const response = await fetch(urlRpc, {
                     method: 'POST',
@@ -405,8 +406,15 @@
                 if (!response.ok) {
                     throw new Error('RPC endpoint failed to respond.');
                 }
+
                 const result = await response.json();
-                if (result.success) { console.log(result.message); } else { console.warn(result.message); }
+                
+                if (result.success) {
+                    console.log(result.message);
+                } else {
+                    console.warn(result.message);
+                }
+                
                 cekSemuaNotifikasi();
             } catch (err) {
                 console.error('System Error: ' + err.message);
@@ -426,8 +434,7 @@
                 const myGroups = allGroups.filter(g => g.password !== 'dm_pending' && g.members && g.members.find(m => m.email === myEmail));
                 
                 if(myGroups.length === 0) {
-                    const dataBahasa = kontenBahasa[lang];
-                    const emptyHTML = `<div class="empty-state">${dataBahasa ? dataBahasa.hubEmptyChat : 'Belum ada obrolan.'}</div>`;
+                    const emptyHTML = `<div class="empty-state">${kontenBahasa[lang].hubEmptyChat}</div>`;
                     if (hubList.innerHTML !== emptyHTML) hubList.innerHTML = emptyHTML;
                     return;
                 }
@@ -454,9 +461,11 @@
                 
                 myGroups.forEach(g => {
                     let cNew = 0, cAge = 0, cFade = 0;
+                    
                     g.cachedMsgs.forEach(msg => {
                         const msgTime = new Date(msg.created_at).getTime();
                         const diffHours = (now - msgTime) / 3600000;
+                        
                         if(diffHours < 24) {
                             if(diffHours < 9) cNew++; 
                             else if(diffHours < 22) cAge++; 
@@ -484,25 +493,39 @@
                 const errHTML = `<div class="empty-state">System Error: ${err.message}</div>`;
                 if (hubList.innerHTML !== errHTML) hubList.innerHTML = errHTML;
             }
-        }
-
-        async function cekSemuaNotifikasi() {
+            }
+                    async function cekSemuaNotifikasi() {
             const myEmail = localStorage.getItem('sush_curEmail');
             const badge = document.getElementById('titleBadge');
             const listContainer = document.getElementById('notifList');
             const lang = localStorage.getItem('sush_lang') || 'ID';
+            
             if(!myEmail) return;
 
             let html = '';
             let hasNotif = false;
+
             const pendingStr = localStorage.getItem('sush_pendingJoin');
             if (pendingStr) {
                 hasNotif = true;
                 const pending = JSON.parse(pendingStr);
-                const txt = lang === 'ID' ? `Apakah Anda ingin bergabung ke grup <strong>${pending.name}</strong>?` : `Do you want to join the group <strong>${pending.name}</strong>?`;
+                const txt = lang === 'ID' 
+                    ? `Apakah Anda ingin bergabung ke grup <strong>${pending.name}</strong>?` 
+                    : `Do you want to join the group <strong>${pending.name}</strong>?`;
                 const btnY = lang === 'ID' ? 'YA' : 'YES';
                 const btnN = lang === 'ID' ? 'TIDAK' : 'NO';
-                html += `<div class="notif-item" style="margin-bottom: 10px;"><div class="notif-text">${txt}</div><div class="notif-bars"><div class="notif-btns"><button class="btn-notif-accept" onclick="prosesKetukPintu('ya')">${btnY}</button><button class="btn-notif-reject" onclick="prosesKetukPintu('tidak')">${btnN}</button></div></div></div>`;
+                
+                html += `
+                    <div class="notif-item" style="margin-bottom: 10px;">
+                        <div class="notif-text">${txt}</div>
+                        <div class="notif-bars">
+                            <div class="notif-btns">
+                                <button class="btn-notif-accept" onclick="prosesKetukPintu('ya')">${btnY}</button>
+                                <button class="btn-notif-reject" onclick="prosesKetukPintu('tidak')">${btnN}</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
             }
             
             try {
@@ -511,15 +534,32 @@
                 const allGroups = await resGroups.json();
                 
                 if (allGroups && allGroups.length > 0) {
-                    const dmRequests = allGroups.filter(g => g.password === 'dm_pending' && g.members && g.members.find(m => m.email === myEmail && m.creator === false));
+                    const dmRequests = allGroups.filter(g => 
+                        g.password === 'dm_pending' && 
+                        g.members && g.members.find(m => m.email === myEmail && m.creator === false)
+                    );
+
                     dmRequests.forEach(req => {
                         hasNotif = true;
                         const pengirimData = req.members.find(m => m.creator === true);
                         const namaPengirimClean = pengirimData ? pengirimData.alias.split('#')[0] : 'Unknown';
-                        const txt = lang === 'ID' ? `User <strong>${namaPengirimClean}</strong> menambahkan anda menjadi teman.` : `User <strong>${namaPengirimClean}</strong> added you as a friend.`;
+                        const txt = lang === 'ID' 
+                            ? `User <strong>${namaPengirimClean}</strong> menambahkan anda menjadi teman.` 
+                            : `User <strong>${namaPengirimClean}</strong> added you as a friend.`;
                         const btnAcc = lang === 'ID' ? 'TERIMA' : 'ACCEPT';
                         const btnRej = lang === 'ID' ? 'TOLAK' : 'REJECT';
-                        html += `<div class="notif-item" style="margin-bottom: 10px;"><div class="notif-text">${txt}</div><div class="notif-bars"><div class="notif-btns"><button class="btn-notif-accept" onclick="aksiPermintaan('${req.id}', 'terima')">${btnAcc}</button><button class="btn-notif-reject" onclick="aksiPermintaan('${req.id}', 'tolak')">${btnRej}</button></div></div></div>`;
+
+                        html += `
+                            <div class="notif-item" style="margin-bottom: 10px;">
+                                <div class="notif-text">${txt}</div>
+                                <div class="notif-bars">
+                                    <div class="notif-btns">
+                                        <button class="btn-notif-accept" onclick="aksiPermintaan('${req.id}', 'terima')">${btnAcc}</button>
+                                        <button class="btn-notif-reject" onclick="aksiPermintaan('${req.id}', 'tolak')">${btnRej}</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
                     });
 
                     allGroups.forEach(g => {
@@ -528,13 +568,25 @@
                                 g.pending_votes.forEach(pv => {
                                     const vBy = pv.voted_by || [];
                                     const rBy = pv.rejected_by || [];
+                                    
                                     if (!vBy.includes(myEmail) && !rBy.includes(myEmail)) {
                                         hasNotif = true;
                                         const namaCalonClean = pv.alias.split('#')[0];
                                         const txt = lang === 'ID' ? `Izinkan <strong>${namaCalonClean}</strong> bergabung ke <strong>${g.name}</strong>?` : `Allow <strong>${namaCalonClean}</strong> to join <strong>${g.name}</strong>?`;
                                         const btnAcc = lang === 'ID' ? 'TERIMA' : 'ACCEPT';
                                         const btnRej = lang === 'ID' ? 'TOLAK' : 'REJECT';
-                                        html += `<div class="notif-item" style="margin-bottom: 10px;"><div class="notif-text">${txt}</div><div class="notif-bars"><div class="notif-btns"><button class="btn-notif-accept" onclick="prosesVote('${pv.email}', '${g.id}', true)">${btnAcc}</button><button class="btn-notif-reject" onclick="prosesVote('${pv.email}', '${g.id}', false)">${btnRej}</button></div></div></div>`;
+
+                                        html += `
+                                            <div class="notif-item" style="margin-bottom: 10px;">
+                                                <div class="notif-text">${txt}</div>
+                                                <div class="notif-bars">
+                                                    <div class="notif-btns">
+                                                        <button class="btn-notif-accept" onclick="prosesVote('${pv.email}', '${g.id}', true)">${btnAcc}</button>
+                                                        <button class="btn-notif-reject" onclick="prosesVote('${pv.email}', '${g.id}', false)">${btnRej}</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        `;
                                     }
                                 });
                             }
@@ -565,8 +617,12 @@
                     const cBox = document.getElementById('universalDropdownContent');
                     dropdown.style.maxHeight = (cBox.scrollHeight + 30) + 'px';
                 }
-            } catch (err) { console.error('System Error: ' + err.message); }
+                
+            } catch (err) {
+                console.error('System Error: ' + err.message);
+            }
         }
+
         function toggleMenuPanel(jenisMenu) {
             const dropdown = document.getElementById('universalDropdown');
             const contentBox = document.getElementById('universalDropdownContent');
@@ -633,7 +689,11 @@
         function togglePinFriend(roomId, event) {
             if (event) event.stopPropagation();
             let pinned = [];
-            try { pinned = JSON.parse(localStorage.getItem('sush_pinnedFriends')) || []; } catch (e) { pinned = []; }
+            try {
+                pinned = JSON.parse(localStorage.getItem('sush_pinnedFriends')) || [];
+            } catch (e) {
+                pinned = [];
+            }
             
             if (pinned.includes(roomId)) {
                 pinned = pinned.filter(id => id !== roomId);
@@ -678,22 +738,34 @@
                         if (roomMsgs.length > 0) {
                             latestTime = Math.max(...roomMsgs.map(m => new Date(m.created_at).getTime()));
                         }
-                        temanList.push({ alias: temanObj.alias, roomId: dm.id, latestMsgTime: latestTime });
+                        
+                        temanList.push({ 
+                            alias: temanObj.alias, 
+                            roomId: dm.id,
+                            latestMsgTime: latestTime
+                        });
                     }
                 });
                 
                 let pinnedIds = [];
-                try { pinnedIds = JSON.parse(localStorage.getItem('sush_pinnedFriends')) || []; } catch (e) { pinnedIds = []; }
+                try {
+                    pinnedIds = JSON.parse(localStorage.getItem('sush_pinnedFriends')) || [];
+                } catch (e) {
+                    pinnedIds = [];
+                }
                 
                 let pinnedPasukan = [];
                 let regulerPasukan = [];
                 
                 temanList.forEach(t => {
-                    if (pinnedIds.includes(t.roomId)) pinnedPasukan.push(t);
-                    else regulerPasukan.push(t);
+                    if (pinnedIds.includes(t.roomId)) {
+                        pinnedPasukan.push(t);
+                    } else {
+                        regulerPasukan.push(t);
+                    }
                 });
                 
-                const sortLogic = (a, b) => {
+                pinnedPasukan.sort((a, b) => {
                     const partsA = a.alias.split('#');
                     const partsB = b.alias.split('#');
                     const namaA = partsA[0].toLowerCase();
@@ -703,10 +775,19 @@
                     const numA = parseInt(partsA[1], 10) || 0;
                     const numB = parseInt(partsB[1], 10) || 0;
                     return numA - numB;
-                };
+                });
 
-                pinnedPasukan.sort(sortLogic);
-                regulerPasukan.sort(sortLogic);
+                regulerPasukan.sort((a, b) => {
+                    const partsA = a.alias.split('#');
+                    const partsB = b.alias.split('#');
+                    const namaA = partsA[0].toLowerCase();
+                    const namaB = partsB[0].toLowerCase();
+                    if (namaA < namaB) return -1;
+                    if (namaA > namaB) return 1;
+                    const numA = parseInt(partsA[1], 10) || 0;
+                    const numB = parseInt(partsB[1], 10) || 0;
+                    return numA - numB;
+                });
                 
                 let htmlList = '';
                 
@@ -722,6 +803,7 @@
                                 else indicator = ` <span class="neon-dot dot-red">•</span>`;
                             }
                         }
+                        
                         htmlList += `
                             <div class="list-item-friend" onclick="bukaChatRoom('${t.roomId}')" style="margin-bottom: 5px; border-left: 3px solid #ffd700;">
                                 <span class="list-friend-name">${t.alias}${indicator}</span>
@@ -751,6 +833,7 @@
                             else indicator = ` <span class="neon-dot dot-red">•</span>`;
                         }
                     }
+                    
                     htmlList += `
                         <div class="list-item-friend" onclick="bukaChatRoom('${t.roomId}')" style="margin-bottom: 5px;">
                             <span class="list-friend-name">${t.alias}${indicator}</span>
@@ -774,46 +857,6 @@
             } catch (err) {
                 container.innerHTML = `<div style="font-size:0.8rem; color:#ff4a4a; text-align:center; padding:10px;">Error: ${err.message}</div>`;
             }
-        }
-
-        function cekPermintaanPertemanan() {
-            if (currentActiveMenu === 'notif') { cekSemuaNotifikasi(); } else { cekBadgeNotifikasi(); }
-        }
-        
-        async function cekBadgeNotifikasi() {
-            const myEmail = localStorage.getItem('sush_curEmail');
-            const badge = document.getElementById('titleBadge');
-            if(!myEmail || !badge) return;
-            try {
-                const pendingStr = localStorage.getItem('sush_pendingJoin');
-                let hasLocalNotif = pendingStr ? true : false;
-                const urlGetDM = SUPABASE_URL + '/rest/v1/groups?password=eq.dm_pending';
-                const resDM = await fetch(urlGetDM, { method: 'GET', headers: reqHeaders });
-                const dataDM = await resDM.json();
-                const requestsForMe = dataDM.filter(g => g.members && g.members.find(m => m.email === myEmail && m.creator === false));
-
-                const urlGetGroups = SUPABASE_URL + '/rest/v1/groups?select=*';
-                const resGroups = await fetch(urlGetGroups, { method: 'GET', headers: reqHeaders });
-                const dataGroups = await resGroups.json();
-                
-                let voteRequestsCount = 0;
-                dataGroups.forEach(g => {
-                    if (g.members && g.members.find(m => m.email === myEmail)) {
-                        if (g.pending_votes && g.pending_votes.length > 0) {
-                            g.pending_votes.forEach(pv => {
-                                if (!pv.voted_by || !pv.voted_by.includes(myEmail)) voteRequestsCount++;
-                            });
-                        }
-                    }
-                });
-
-                if (hasLocalNotif || requestsForMe.length > 0 || voteRequestsCount > 0) {
-                    if (badge.className !== "neon-dot dot-yellow") badge.className = "neon-dot dot-yellow";
-                    if (badge.style.display !== 'inline-block') badge.style.display = 'inline-block';
-                } else {
-                    if (badge.style.display !== 'none') badge.style.display = 'none';
-                }
-            } catch(e) {}
         }
 
         async function aksiPermintaan(roomId, tipe) {
@@ -845,18 +888,60 @@
                     });
                     alert(lang === 'ID' ? 'Jalur chat personal berhasil terbentuk!' : 'Direct message room established successfully!');
                 }
-                cekBadgeNotifikasi();
+                cekSemuaNotifikasi();
                 renderHubList(); 
             } catch (err) { alert('System Error: ' + err.message); }
         }
 
-        function bukaChatRoom(id) {
-            localStorage.setItem('sush_activeGroup', id);
-            if (typeof navigasiKeHalaman === 'function') {
-                navigasiKeHalaman('chat.html', 'slide-out-left');
+        function cekPermintaanPertemanan() {
+            if (currentActiveMenu === 'notif') {
+                cekSemuaNotifikasi();
             } else {
-                window.location.href = 'chat.html';
+                cekBadgeNotifikasi();
             }
+        }
+        
+        async function cekBadgeNotifikasi() {
+            const myEmail = localStorage.getItem('sush_curEmail');
+            const badge = document.getElementById('titleBadge');
+            if(!myEmail || !badge) return;
+            
+            try {
+                const pendingStr = localStorage.getItem('sush_pendingJoin');
+                let hasLocalNotif = pendingStr ? true : false;
+
+                const urlGetDM = SUPABASE_URL + '/rest/v1/groups?password=eq.dm_pending';
+                const resDM = await fetch(urlGetDM, { method: 'GET', headers: reqHeaders });
+                const dataDM = await resDM.json();
+
+                const requestsForMe = dataDM.filter(g => 
+                    g.members && g.members.find(m => m.email === myEmail && m.creator === false)
+                );
+
+                const urlGetGroups = SUPABASE_URL + '/rest/v1/groups?select=*';
+                const resGroups = await fetch(urlGetGroups, { method: 'GET', headers: reqHeaders });
+                const dataGroups = await resGroups.json();
+                
+                let voteRequestsCount = 0;
+                dataGroups.forEach(g => {
+                    if (g.members && g.members.find(m => m.email === myEmail)) {
+                        if (g.pending_votes && g.pending_votes.length > 0) {
+                            g.pending_votes.forEach(pv => {
+                                if (!pv.voted_by || !pv.voted_by.includes(myEmail)) {
+                                    voteRequestsCount++;
+                                }
+                            });
+                        }
+                    }
+                });
+
+                if (hasLocalNotif || requestsForMe.length > 0 || voteRequestsCount > 0) {
+                    if (badge.className !== "neon-dot dot-yellow") badge.className = "neon-dot dot-yellow";
+                    if (badge.style.display !== 'inline-block') badge.style.display = 'inline-block';
+                } else {
+                    if (badge.style.display !== 'none') badge.style.display = 'none';
+                }
+            } catch(e) {}
         }
     </script>
 </body>
