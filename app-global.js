@@ -40,7 +40,9 @@ var kontenBahasa = {
         msgNew: 'Baru', msgAging: 'Lama', msgFading: 'Memudar',
         groupMembers: 'Anggota',
         lblUser: 'Username:', lblAlias: 'Nama Samaran:', lblEmail: 'Email:',
-        userTaken: 'Username sudah digunakan!'
+        userTaken: 'Username sudah digunakan!',
+        lblExileVote: 'ingin mengeluarkan',
+        lblExileFrom: 'dari grup'     
     },
     'EN': {
         title: 'Welcome to SUSHNHUSH',
@@ -74,7 +76,9 @@ var kontenBahasa = {
         msgNew: 'New', msgAging: 'Aging', msgFading: 'Fading',
         groupMembers: 'Members',
         lblUser: 'Username:', lblAlias: 'Alias:', lblEmail: 'Email:',
-        userTaken: 'Username is already taken!'
+        userTaken: 'Username is already taken!',
+        lblExileVote: 'wants to remove',
+        lblExileFrom: 'from group'   
     }
 };
 
