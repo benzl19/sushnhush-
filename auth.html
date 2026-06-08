@@ -8,17 +8,18 @@
 </head>
 <body>
     <div class="container">
-        <!-- Taktis: Terkunci display block & opacity 1 agar langsung merobek pelindung CSS -->
         <div class="auth-gate" id="authGate" style="display: block; opacity: 1;">
             <svg class="svg-logo-small" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                 <line x1="40" y1="20" x2="30" y2="80" class="shh-line" />
                 <line x1="60" y1="20" x2="50" y2="80" class="shh-line" />
                 <line x1="20" y1="50" x2="80" y2="50" class="shh-cross" />
             </svg>
+            
             <div class="auth-tabs">
                 <button class="tab-btn active" id="tabLogin" onclick="switchTab('login')"></button>
                 <button class="tab-btn" id="tabRegister" onclick="switchTab('register')"></button>
             </div>
+            
             <div id="formLogin" class="show-node">
                 <input type="text" id="loginUser" class="input-field">
                 <div class="password-wrapper">
@@ -28,31 +29,44 @@
                 <button class="btn-submit" id="btnLoginSubmit" onclick="simulasiLogin()"></button>
                 <p class="forgot-link" id="loginForgot" onclick="trigger3Blok()"></p>
             </div>
+            
             <div id="formRegister" class="hide-node">
                 <input type="text" id="regUser" class="input-field" autocomplete="off" oninput="cekPassword()">
                 <p class="error-text" id="userTakenText"></p>
                 <input type="email" id="regEmail" class="input-field" autocomplete="email" oninput="cekPassword()">
+                
                 <div class="password-wrapper">
                     <input type="password" id="regPass" class="input-field" autocomplete="new-password" oninput="cekPassword()">
                     <button type="button" class="toggle-pass" onclick="togglePassword('regPass', this)"></button>
                 </div>
+
                 <div class="password-wrapper">
                     <input type="password" id="regPassConfirm" class="input-field" autocomplete="new-password" oninput="cekPassword()">
                     <button type="button" class="toggle-pass" onclick="togglePassword('regPassConfirm', this)"></button>
                 </div>
+                
                 <p class="error-text" id="passMismatchText"></p>
                 <p class="helper-text" id="passHelperText"></p>
+                
                 <div class="divider-text" id="reg3BlockTitle"></div>
                 <input type="text" id="regQ" class="input-field" autocomplete="off">
                 <input type="text" id="regClue" class="input-field" autocomplete="off">
                 <input type="password" id="regAns" class="input-field" autocomplete="off">
+                
                 <button class="btn-submit" id="btnRegSubmit" onclick="simulasiRegister()" disabled></button>
             </div>
         </div>
     </div>
-    <script src="app-global.js"></script>
         <script>
-        // Taktis: Menyuntikkan langsung objek kamus bahasa Blok 5 lama ke dalam file internal
+        const SUPABASE_URL = 'https://zyqqywdobpkyhmzcrlws.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_phKP0N4tOOkrVKr4lyQZHw_T9cqh9Bk';
+        
+        const reqHeaders = {
+            'apikey': SUPABASE_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_KEY,
+            'Content-Type': 'application/json'
+        };
+
         const kontenBahasaLokal = {
             'ID': {
                 tabL: 'Masuk', tabR: 'Daftar Akun',
@@ -71,21 +85,14 @@
         };
 
         window.addEventListener('load', function() {
-            const lang = localStorage.getItem('sush_lang');
-            
-            // Jaring Pengaman: Jika hancur/kosong, paksa user mundur memilih bahasa ke index.html baru
-            if (!lang) {
-                if (typeof navigasiKeHalaman === 'function') {
-                    navigasiKeHalaman('index.html', 'slide-out-right');
-                } else {
-                    window.location.href = 'index.html';
-                }
-                return;
+            let lang = localStorage.getItem('sush_lang');
+            if (!lang || (lang !== 'ID' && lang !== 'EN')) {
+                lang = 'ID';
+                localStorage.setItem('sush_lang', 'ID');
             }
             
             const data = kontenBahasaLokal[lang];
-            if (!data) return;
-
+            
             document.getElementById('tabLogin').innerText = data.tabL; 
             document.getElementById('tabRegister').innerText = data.tabR;
             document.getElementById('loginUser').placeholder = data.loginUserPlaceholder; 
@@ -96,6 +103,7 @@
             document.getElementById('regEmail').placeholder = data.regEmailPlaceholder;
             document.getElementById('regPass').placeholder = data.regPassPlaceholder; 
             document.getElementById('regPassConfirm').placeholder = lang === 'ID' ? 'Ulangi Password...' : 'Repeat Password...';
+            document.getElementById('passMismatchText').innerText = lang === 'ID' ? 'Password tidak sama!' : 'Passwords do not match!';
             document.getElementById('passHelperText').innerText = data.passHelper; 
             document.getElementById('reg3BlockTitle').innerText = data.reg3BlockTitle;
             document.getElementById('regQ').placeholder = data.regQPlaceholder; 
@@ -113,6 +121,7 @@
             const regForm = document.getElementById('formRegister');
             const tabL = document.getElementById('tabLogin'); 
             const tabR = document.getElementById('tabRegister');
+            
             if (tab === 'login') { 
                 loginForm.classList.replace('hide-node', 'show-node'); 
                 regForm.classList.replace('show-node', 'hide-node'); 
@@ -147,11 +156,9 @@
             const p2 = document.getElementById('regPassConfirm').value;
             const err = document.getElementById('passMismatchText');
             const btn = document.getElementById('btnRegSubmit');
-            const lang = localStorage.getItem('sush_lang') || 'ID';
             
             if (p2 === "") { err.style.display = 'none'; btn.disabled = true; return; }
             if (p1 !== p2) { 
-                err.innerText = lang === 'ID' ? 'Password tidak sama!' : 'Passwords do not match!';
                 err.style.display = 'block'; btn.disabled = true; 
             } else { 
                 err.style.display = 'none'; 
@@ -245,11 +252,7 @@
                     alert(`Registration Successful\n\nAccount created. System randomized your alias to: ${newAlias}`);
                 }
                 
-                if (typeof navigasiKeHalaman === 'function') {
-                    navigasiKeHalaman('beranda.html', 'slide-out-left');
-                } else {
-                    window.location.href = 'beranda.html';
-                }
+                window.location.href = 'beranda.html';
                 
             } catch (err) {
                 alert(lang === 'ID' ? "Koneksi ke server gagal: " + err.message : "Failed to connect to server: " + err.message);
@@ -291,11 +294,7 @@
                     alert(`Matching credentials with database...\nSuccessfully entered SUSHNHUSH!`);
                 }
                 
-                if (typeof navigasiKeHalaman === 'function') {
-                    navigasiKeHalaman('beranda.html', 'slide-out-left');
-                } else {
-                    window.location.href = 'beranda.html';
-                }
+                window.location.href = 'beranda.html';
             } catch (err) {
                 alert('System Error: ' + err.message);
             }
@@ -305,7 +304,7 @@
             const lang = localStorage.getItem('sush_lang') || 'ID';
             const inputUser = prompt(lang === 'ID' ? "Masukkan Email/Username terdaftar:" : "Enter your registered Email/Username:");
             if (!inputUser) return;
-            alert(lang === 'ID' ? `[PROSES PEMULIHAN 3 BLOK AKTIF] \n\nSistem menampilkan Pertanyaan Rahasia & Clue buatanmu sendiri. \n\n[Skenario Sukses]: Jika Jawaban cocok, link reset otomatis terkirim via Email Service Gratisan (Brevo/Resend)!` : `[3-BLOCK RECOVERY ACTIVE] \n\nSystem fetches your unique Secret Question & Clue. \n\n[Success Scenario]: If the Answer matches, a reset link will be sent via Free Email Service!`);
+            alert(lang === 'ID' ? `[PROSES PEMULIHAN 3 BLOK AKTIF] \n\nSistem menampilkan Pertanyaan Rahasia & Clue buatanmu sendiri. \n\n[Skenario Sukses]: Jika Jawaban cocok, link reset otomatis terkirim via Email Service Gratisan!` : `[3-BLOCK RECOVERY ACTIVE] \n\nSystem fetches your unique Secret Question & Clue. \n\n[Success Scenario]: If the Answer matches, a reset link will be sent via Free Email Service!`);
         }
     </script>
 </body>
