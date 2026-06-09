@@ -343,19 +343,18 @@
                     return;
                 }
 
-                const urlPatch = SUPABASE_URL + '/rest/v1/users?id=eq.' + user.id;
-                const patchHeaders = Object.assign({}, reqHeaders, { 'Prefer': 'return=representation' });
+                const urlPatch = SUPABASE_URL + '/rest/v1/users?email=eq.' + encodeURIComponent(user.email);
                 const resPatch = await fetch(urlPatch, {
                     method: 'PATCH',
-                    headers: patchHeaders,
+                    headers: reqHeaders,
                     body: JSON.stringify({ password: passwordBaru })
                 });
 
                 if (!resPatch.ok) {
-                    const errObj = await resPatch.json();
-                    alert("System Error: " + errObj.message);
+                    alert("System Error: Gagal memperbarui password di database.");
                     return;
                 }
+
 
                 alert(lang === 'ID'
                     ? "Password Anda berhasil diperbarui! Silakan masuk menggunakan password baru Anda."
