@@ -203,6 +203,58 @@
             }
         }
             
+        async function prosesPicatTendang(targetEmail, targetAlias) {
+            const lang = localStorage.getItem('sush_lang') || 'ID';
+            const msg = lang === 'ID' ? `Yakin ingin menendang ${targetAlias.split('#')[0]} dari grup?` : `Are you sure you want to exile ${targetAlias.split('#')[0]} from the group?`;
+            if (!confirm(msg)) return;
+
+            try {
+                const safeId = activeGroupId.replace('#', '');
+                const myEmail = localStorage.getItem('sush_curEmail');
+                const myAlias = localStorage.getItem('sush_curAlias');
+
+                const urlGroup = SUPABASE_URL + '/rest/v1/groups?id=eq.' + encodeURIComponent(safeId);
+                const resGroup = await fetch(urlGroup, { method: 'GET', headers: reqHeaders });
+                const groupData = await resGroup.json();
+
+                if (!groupData || groupData.length === 0) return;
+                const g = groupData[0];
+                let pendingVotes = g.pending_votes || [];
+
+                const isAlreadyOnTrial = pendingVotes.find(pv => pv.type === 'exile' && pv.target_email === targetEmail);
+                if (isAlreadyOnTrial) {
+                    alert(lang === 'ID' ? 'Proses pengeluaran user ini sudah berjalan di beranda.' : 'Exile process for this user is already running on dashboard.');
+                    return;
+                }
+
+                const newExileRequest = {
+                    type: 'exile',
+                    target_email: targetEmail,
+                    target_alias: targetAlias,
+                    triggered_by_email: myEmail,
+                    triggered_by_alias: myAlias,
+                    voted_by: [myEmail], 
+                    rejected_by: []
+                };
+
+                pendingVotes.push(newExileRequest);
+
+                const urlPatch = SUPABASE_URL + '/rest/v1/groups?id=eq.' + encodeURIComponent(safeId);
+                await fetch(urlPatch, {
+                    method: 'PATCH',
+                    headers: Object.assign({}, reqHeaders, { 'Prefer': 'return=representation' }),
+                    body: JSON.stringify({ pending_votes: pendingVotes })
+                });
+
+                alert(lang === 'ID' ? 'Permintaan tendang berhasil diproses ke beranda anggota.' : 'Exile request successfully processed to members\' dashboard.');
+                toggleGroupMenuPanel(); 
+                urusRefreshChatManual(); 
+
+            } catch (err) {
+                alert('System Error: ' + err.message);
+            }
+        }
+            
         async function salinLinkUndangan() {
             if(!activeGroupId) return;
             const lang = localStorage.getItem('sush_lang') || 'ID';
