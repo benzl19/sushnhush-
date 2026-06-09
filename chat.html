@@ -38,10 +38,10 @@
     </div>
     <script src="app-global.js"></script>
         <script>
-        activeGroupId = localStorage.getItem('sush_activeGroup');
 
-         window.addEventListener('load', function() {
-            activeGroupId = localStorage.getItem('sush_activeGroup');
+        window.addEventListener('load', function() {
+            window.activeGroupId = localStorage.getItem('sush_activeGroup');
+            activeGroupId = window.activeGroupId;
             
             if (!localStorage.getItem('sush_curEmail') || !activeGroupId) {
                 if (typeof navigasiKeHalaman === 'function') {
@@ -51,9 +51,6 @@
                 }
                 return;
             }
-            initChatRoom();
-        });
-
             initChatRoom();
         });
 
@@ -68,9 +65,6 @@
             document.getElementById('chatInputBox').placeholder = lang === 'ID' ? 'Ketik pesan rahasia di sini...' : 'Type secret message here...';
 
             urusRefreshChatManual();
-        }
-
-            });
         }
 
         function kembaliKeHub() {
