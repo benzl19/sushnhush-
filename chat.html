@@ -254,6 +254,52 @@
                 alert('System Error: ' + err.message);
             }
         }
+         async function prosesKetukKeluar() {
+            const lang = localStorage.getItem('sush_lang') || 'ID';
+            const msg = lang === 'ID' ? 'Yakin ingin melepas kedaulatan dan keluar dari sirkel ini?' : 'Are you sure you want to leave this circle?';
+            if (!confirm(msg)) return;
+
+            try {
+                const safeId = activeGroupId.replace('#', '');
+                const myEmail = localStorage.getItem('sush_curEmail');
+
+                const urlGroup = SUPABASE_URL + '/rest/v1/groups?id=eq.' + encodeURIComponent(safeId);
+                const resGroup = await fetch(urlGroup, { method: 'GET', headers: reqHeaders });
+                const groupData = await resGroup.json();
+
+                if (!groupData || groupData.length === 0) return;
+                const g = groupData[0];
+                let members = g.members || [];
+
+                const myData = members.find(m => m.email === myEmail);
+                let sisaMembers = members.filter(m => m.email !== myEmail);
+
+                // Transfer admin jika creator kabur (anti-grup mati)
+                if (myData && myData.creator === true && sisaMembers.length > 0) {
+                    sisaMembers[0].creator = true; 
+                }
+
+                if (sisaMembers.length === 0) {
+                    await fetch(urlGroup, { method: 'DELETE', headers: reqHeaders });
+                } else {
+                    const urlPatch = SUPABASE_URL + '/rest/v1/groups?id=eq.' + encodeURIComponent(safeId);
+                    await fetch(urlPatch, {
+                        method: 'PATCH',
+                        headers: Object.assign({}, reqHeaders, { 'Prefer': 'return=representation' }),
+                        body: JSON.stringify({ members: sisaMembers })
+                    });
+                }
+
+                kembaliKeHub();
+            } catch (err) {
+                alert('System Error: ' + err.message);
+            }
+        }
+
+        function simulasiTambahTemanJalurCepat(targetAlias) {
+            const lang = localStorage.getItem('sush_lang') || 'ID';
+            alert(lang === 'ID' ? `Untuk menjaga keamanan, silakan copy nama ${targetAlias} dan gunakan menu 'Cari Secret ID' di panel beranda.` : `For security, please copy ${targetAlias} and use 'Search Secret ID' on the dashboard.`);
+        }
             
         async function salinLinkUndangan() {
             if(!activeGroupId) return;
