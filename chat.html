@@ -95,7 +95,114 @@
                 window.location.href = 'beranda.html';
             }
         }
+        
+        async function toggleGroupMenuPanel() {
+            const dropdown = document.getElementById('groupDropdown');
+            const container = document.getElementById('memberListContainer');
+            if (!dropdown || !container || !activeGroupId) return;
 
+            if (dropdown.classList.contains('active')) {
+                dropdown.style.maxHeight = '0px';
+                dropdown.classList.remove('active');
+                return;
+            }
+
+            container.innerHTML = '<div style="color:#a0a0a0; font-size:0.85rem; text-align:center; padding: 10px;">Menyadap data sirkel...</div>';
+            dropdown.classList.add('active');
+            dropdown.style.maxHeight = '100px'; 
+
+            try {
+                const safeId = activeGroupId.replace('#', '');
+                const myEmail = localStorage.getItem('sush_curEmail');
+                const lang = localStorage.getItem('sush_lang') || 'ID';
+                
+                const urlGroup = SUPABASE_URL + '/rest/v1/groups?id=eq.' + encodeURIComponent(safeId);
+                const resGroup = await fetch(urlGroup, { method: 'GET', headers: reqHeaders });
+                const groupData = await resGroup.json();
+                
+                if (!groupData || groupData.length === 0) {
+                    container.innerHTML = '<div style="color:#ff4a4a; font-size:0.85rem; text-align:center;">Sirkel rahasia tidak ditemukan.</div>';
+                    return;
+                }
+                const g = groupData[0];
+                let members = g.members || [];
+
+                const urlDMs = SUPABASE_URL + '/rest/v1/groups?select=members&password=in.(dm_active,dm_pending)';
+                const resDMs = await fetch(urlDMs, { method: 'GET', headers: reqHeaders });
+                const allDMs = await resDMs.json();
+                
+                let friendEmails = [];
+                allDMs.forEach(dm => {
+                    const isMyDM = dm.members.find(m => m.email === myEmail);
+                    if (isMyDM) {
+                        dm.members.forEach(m => {
+                            if (m.email !== myEmail) friendEmails.push(m.email);
+                        });
+                    }
+                });
+
+
+                members.sort((a, b) => {
+                    const nameA = a.alias.toLowerCase();
+                    const nameB = b.alias.toLowerCase();
+                    if (nameA < nameB) return -1;
+                    if (nameA > nameB) return 1;
+                    return 0;
+                });
+
+
+                const txtKeluar = lang === 'ID' ? 'Keluar Grup' : 'Leave Group';
+                const txtTendang = lang === 'ID' ? 'Tendang' : 'Exile';
+                
+                let htmlList = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px dashed #ff4a4a; padding-bottom: 10px;">
+                        <span style="color: #ffffff; font-weight: bold; font-size: 0.95rem;">Sidang Kedaulatan</span>
+                        <button onclick="prosesKetukKeluar()" style="background: transparent; border: 1px solid #ff4a4a; color: #ff4a4a; padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; cursor: pointer;">[ ${txtKeluar} ]</button>
+                    </div>
+                `;
+
+                let currentAbjadMarker = '';
+                
+                members.forEach(m => {
+                    const firstLetter = m.alias.charAt(0).toUpperCase();
+                    if (firstLetter !== currentAbjadMarker) {
+                        currentAbjadMarker = firstLetter;
+                        htmlList += `<div class="divider-text" style="margin-top: 10px; font-weight: bold; border-bottom: 1px solid #1f2833; color: #45f3ff; font-size:0.85rem; padding-bottom:2px;">${currentAbjadMarker}</div>`;
+                    }
+
+                    if (m.email === myEmail) {
+                        
+                        htmlList += `
+                            <div class="list-item-friend" style="margin-bottom: 5px; background: transparent; border-left: 3px solid #a0a0a0; padding: 10px;">
+                                <span class="list-friend-name" style="color:#a0a0a0;">${m.alias} (Kamu)</span>
+                            </div>
+                        `;
+                    } else {
+                        
+                        const isFriend = friendEmails.includes(m.email);
+                        const btnAdd = isFriend ? '' : `<span onclick="simulasiTambahTemanJalurCepat('${m.alias}')" style="cursor: pointer; font-size: 1.2rem; color: #45f3ff; font-weight: bold; margin-right: 15px;" title="Tambah Teman">[+]</span>`;
+                        const btnExile = `<span onclick="prosesPicatTendang('${m.email}', '${m.alias}')" style="cursor: pointer; font-size: 0.85rem; color: #ff4a4a; font-weight: bold;">[${txtTendang}]</span>`;
+
+                        htmlList += `
+                            <div class="list-item-friend" style="margin-bottom: 5px; padding: 10px;">
+                                <span class="list-friend-name">${m.alias}</span>
+                                <div style="display: flex; align-items: center;">
+                                    ${btnAdd}
+                                    ${btnExile}
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+
+                container.innerHTML = htmlList;
+                dropdown.style.maxHeight = (container.scrollHeight + 30) + 'px';
+
+            } catch (err) {
+                container.innerHTML = `<div style="color:#ff4a4a; font-size:0.85rem; text-align:center;">System Error: ${err.message}</div>`;
+            }
+        }
+            
         async function salinLinkUndangan() {
             if(!activeGroupId) return;
             const lang = localStorage.getItem('sush_lang') || 'ID';
