@@ -40,7 +40,9 @@
         <script>
         activeGroupId = localStorage.getItem('sush_activeGroup');
 
-        window.addEventListener('load', function() {
+         window.addEventListener('load', function() {
+            activeGroupId = localStorage.getItem('sush_activeGroup');
+            
             if (!localStorage.getItem('sush_curEmail') || !activeGroupId) {
                 if (typeof navigasiKeHalaman === 'function') {
                     navigasiKeHalaman('beranda.html', 'slide-out-right');
@@ -49,6 +51,9 @@
                 }
                 return;
             }
+            initChatRoom();
+        });
+
             initChatRoom();
         });
 
@@ -63,22 +68,8 @@
             document.getElementById('chatInputBox').placeholder = lang === 'ID' ? 'Ketik pesan rahasia di sini...' : 'Type secret message here...';
 
             urusRefreshChatManual();
+        }
 
-            const isLayarSembunyi = document.hidden;
-            const isKehilanganFokus = !document.hasFocus();
-
-            if (!isLayarSembunyi && !isKehilanganFokus) {
-                chatIntervalId = setInterval(urusRefreshChatManual, 3000);
-            }
-
-            document.addEventListener("visibilitychange", function() {
-                if (document.hidden && chatIntervalId) {
-                    clearInterval(chatIntervalId);
-                    chatIntervalId = null;
-                } else if (!document.hidden && !chatIntervalId && activeGroupId) {
-                    urusRefreshChatManual();
-                    chatIntervalId = setInterval(urusRefreshChatManual, 3000);
-                }
             });
         }
 
