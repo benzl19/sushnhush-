@@ -57,16 +57,9 @@
             </div>
         </div>
     </div>
-        <script>
-        const SUPABASE_URL = 'https://zyqqywdobpkyhmzcrlws.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_phKP0N4tOOkrVKr4lyQZHw_T9cqh9Bk';
-        
-        const reqHeaders = {
-            'apikey': SUPABASE_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_KEY,
-            'Content-Type': 'application/json'
-        };
 
+    <script src="app-global.js"></script>
+    <script>
         const kontenBahasaLokal = {
             'ID': {
                 tabL: 'Masuk', tabR: 'Daftar Akun',
@@ -166,25 +159,14 @@
             }
         }
 
-        const anonNouns = [
-            "Panda", "Fox", "Wolf", "Raven", "Viper", "Owl", "Shark", "Falcon", "Panther", "Cobra",
-            "Jaguar", "Lynx", "Leopard", "Cheetah", "Badger", "Coyote", "Condor", "Python", "Mamba", "Raptor",
-            "Scorpion", "Spider", "Wombat", "Ferret", "Otter", "Weasel", "Ocelot", "Orca", "Mantis", "Grizzly", "Zeus", "Poseidon", "Hades", "Apollo", "Ares", "Hermes", "Hephaestus", "Dionysus", "Odin", "Thor", "Loki", "Anubis", "Osiris", "Ra", "Horus", "Artemis", "Athena", "Aphrodite", "Hera", "Achilles", "Hercules", "Perseus", "Spartacus", "Caesar", "Augustus", "Nero", "Caligula", "Romulus", "Remus", "Alexander", "Hannibal", "Joker", "King", "Queen", "Jack", "Ace", "Spade", "Heart", "Diamond", "Club", "Medusa", "Griffin", "Phoenix", "Gargoyle", "Hydra", "Siren", "Gorgon", "Kraken", "Pegasus", "Centaur", "Cyclops", "Titan", "Valkyrie", "Sphinx", "Minotaur", "Yeti", "Bigfoot", "Chimera", "Banshee", "Wendigo"
-        ];
-
-        function generateSecretPin() {
-            const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; 
-            let result = "";
-            for (let i = 0; i < 6; i++) {
-                result += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return result;
-        }
-
         async function simulasiRegister() {
             const userValue = document.getElementById('regUser').value.trim(); 
             const emailValue = document.getElementById('regEmail').value.trim(); 
             const passValue = document.getElementById('regPass').value;
+            const qValue = document.getElementById('regQ').value.trim();
+            const clueValue = document.getElementById('regClue').value.trim();
+            const ansValue = document.getElementById('regAns').value.trim();
+            
             const passwordPattern = /^(?=.*[a-zA-Z])(?=.*\d).{6,}$/; 
             const invalidUserPattern = /[@]/;
             const lang = localStorage.getItem('sush_lang') || 'ID';
@@ -204,6 +186,11 @@
             
             if (!passwordPattern.test(passValue)) {
                 alert(lang === 'ID' ? "Akses Ditolak: Password harus terdiri dari minimal 6 karakter dan merupakan gabungan huruf serta angka!" : "Access Denied: Password must be at least 6 characters and contain both letters and numbers!");
+                return;
+            }
+
+            if (!qValue || !ansValue) {
+                alert(lang === 'ID' ? "Pertanyaan dan Jawaban Rahasia wajib diisi untuk perlindungan 3 Blok!" : "Secret Question and Answer are required for 3-Block security!");
                 return;
             }
             
@@ -233,7 +220,15 @@
                 const resPost = await fetch(urlPost, {
                     method: 'POST',
                     headers: postHeaders,
-                    body: JSON.stringify({ username: userValue, email: emailValue, global_alias: newAlias, password: passValue })
+                    body: JSON.stringify({ 
+                        username: userValue, 
+                        email: emailValue, 
+                        global_alias: newAlias, 
+                        password: passValue,
+                        secret_question: qValue,
+                        secret_clue: clueValue,
+                        secret_answer: ansValue
+                    })
                 });
                 
                 if (!resPost.ok) {
@@ -300,12 +295,46 @@
             }
         }
 
-        function trigger3Blok() {
+        async function trigger3Blok() {
             const lang = localStorage.getItem('sush_lang') || 'ID';
-            const inputUser = prompt(lang === 'ID' ? "Masukkan Email/Username terdaftar:" : "Enter your registered Email/Username:");
+            const inputUser = prompt(lang === 'ID' ? "Masukkan Email atau Username Anda:" : "Enter your Email or Username:");
             if (!inputUser) return;
-            alert(lang === 'ID' ? `[PROSES PEMULIHAN 3 BLOK AKTIF] \n\nSistem menampilkan Pertanyaan Rahasia & Clue buatanmu sendiri. \n\n[Skenario Sukses]: Jika Jawaban cocok, link reset otomatis terkirim via Email Service Gratisan!` : `[3-BLOCK RECOVERY ACTIVE] \n\nSystem fetches your unique Secret Question & Clue. \n\n[Success Scenario]: If the Answer matches, a reset link will be sent via Free Email Service!`);
+
+            try {
+                const urlGet = SUPABASE_URL + '/rest/v1/users?or=(email.eq.' + encodeURIComponent(inputUser) + ',username.eq.' + encodeURIComponent(inputUser) + ')';
+                const res = await fetch(urlGet, { method: 'GET', headers: reqHeaders });
+                const data = await res.json();
+
+                if (!data || data.length === 0) {
+                    alert(lang === 'ID' ? "Akun tidak ditemukan!" : "Account not found!");
+                    return;
+                }
+
+                const user = data[0];
+                if (!user.secret_question) {
+                    alert(lang === 'ID' ? "Akun ini belum mengonfigurasi Keamanan 3 Blok." : "This account has not configured 3-Block Security.");
+                    return;
+                }
+
+                const infoPertanyaan = lang === 'ID' 
+                    ? `[KEAMANAN 3 BLOK]\n\nPertanyaan: ${user.secret_question}\nClue: ${user.secret_clue || '-'}\n\nMasukkan Jawaban Anda:`
+                    : `[3-BLOCK SECURITY]\n\nQuestion: ${user.secret_question}\nClue: ${user.secret_clue || '-'}\n\nEnter your Answer:`;
+                    
+                const inputAns = prompt(infoPertanyaan);
+                if (!inputAns) return;
+
+                if (inputAns.trim().toLowerCase() === String(user.secret_answer).trim().toLowerCase()) {
+                    alert(lang === 'ID' 
+                        ? `Verifikasi Sukses!\n\nPassword Anda adalah: ${user.password}\n(Catatan: Segera ganti password Anda setelah masuk)` 
+                        : `Verification Successful!\n\nYour password is: ${user.password}\n(Note: Please change your password immediately upon login)`);
+                } else {
+                    alert(lang === 'ID' ? "Jawaban salah! Akses pemulihan ditolak." : "Incorrect answer! Recovery access denied.");
+                }
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
         }
     </script>
 </body>
-</html>
+    </html>
+    
