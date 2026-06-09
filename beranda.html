@@ -387,37 +387,52 @@
             }
         }
 
-        async function prosesVote(targetEmail, roomId, setuju) {
+        async function prosesVoteExile(targetEmail, roomId, setuju) {
             try {
                 const myEmail = localStorage.getItem('sush_curEmail');
                 
-                const urlRpc = SUPABASE_URL + '/rest/v1/rpc/rpc_proses_vote';
-                const response = await fetch(urlRpc, {
-                    method: 'POST',
-                    headers: reqHeaders,
-                    body: JSON.stringify({
-                        p_group_id: roomId,
-                        p_target_email: targetEmail,
-                        p_voter_email: myEmail,
-                        p_is_setuju: setuju
-                    })
+                const urlGroup = SUPABASE_URL + '/rest/v1/groups?id=eq.' + encodeURIComponent(roomId);
+                const resGroup = await fetch(urlGroup, { method: 'GET', headers: reqHeaders });
+                const groupData = await resGroup.json();
+
+                if (!groupData || groupData.length === 0) return;
+                const g = groupData[0];
+                let pendingVotes = g.pending_votes || [];
+                let members = g.members || [];
+
+                let currentVote = pendingVotes.find(pv => pv.type === 'exile' && pv.target_email === targetEmail);
+                if (!currentVote) return;
+
+                if (setuju) {
+                    if (!currentVote.voted_by.includes(myEmail)) {
+                        currentVote.voted_by.push(myEmail);
+                    }
+                } else {
+                    if (!currentVote.rejected_by.includes(myEmail)) {
+                        currentVote.rejected_by.push(myEmail);
+                    }
+                }
+
+                const kuorumMayoritas = Math.floor(members.length / 2) + 1;
+
+                if (currentVote.voted_by.length >= kuorumMayoritas) {
+                    members = members.filter(m => m.email !== targetEmail);
+                    pendingVotes = pendingVotes.filter(pv => !(pv.type === 'exile' && pv.target_email === targetEmail));
+                } else if (currentVote.rejected_by.length >= kuorumMayoritas) {
+                    pendingVotes = pendingVotes.filter(pv => !(pv.type === 'exile' && pv.target_email === targetEmail));
+                }
+
+                const urlPatch = SUPABASE_URL + '/rest/v1/groups?id=eq.' + encodeURIComponent(roomId);
+                await fetch(urlPatch, {
+                    method: 'PATCH',
+                    headers: Object.assign({}, reqHeaders, { 'Prefer': 'return=representation' }),
+                    body: JSON.stringify({ members: members, pending_votes: pendingVotes })
                 });
 
-                if (!response.ok) {
-                    throw new Error('RPC endpoint failed to respond.');
-                }
-
-                const result = await response.json();
-                
-                if (result.success) {
-                    console.log(result.message);
-                } else {
-                    console.warn(result.message);
-                }
-                
                 cekSemuaNotifikasi();
+                renderHubList();
             } catch (err) {
-                console.error('System Error: ' + err.message);
+                console.error('Exile Vote Error: ' + err.message);
             }
         }
 
