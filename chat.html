@@ -346,7 +346,8 @@
                 
                 let newHtml = '<div class="msg-system">' + (data ? data.sysWelcome : 'Obrolan dienkripsi.') + '</div>';
                 
-                const urlMsgs = SUPABASE_URL + '/rest/v1/messages?group_id=eq.' + encodeURIComponent(safeId);
+                const batasWaktuISO = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+                const urlMsgs = SUPABASE_URL + '/rest/v1/messages?group_id=eq.' + encodeURIComponent(safeId) + '&created_at=gte.' + encodeURIComponent(batasWaktuISO);
                 const resMsgs = await fetch(urlMsgs, { method: 'GET', headers: reqHeaders });
                 const msgsData = await resMsgs.json();
                 
@@ -393,10 +394,6 @@
             } catch (err) {
                 console.error(err);
             }
-        }
-
-        function handleEnter(e) { 
-            if(e.key === 'Enter') kirimPesan(); 
         }
 
         async function kirimPesan() {
