@@ -112,15 +112,19 @@
             fetch(purgeEndpointUrl, { method: 'DELETE', headers: reqHeaders }).catch(err => console.error(err));
 
             renderHubList();
-            
             cekSemuaNotifikasi();
-            if(typeof notifIntervalId !== 'undefined' && notifIntervalId) clearInterval(notifIntervalId);
-            notifIntervalId = setInterval(cekSemuaNotifikasi, 30000);
         }
 
+
         function logoutSistem() { 
-            if(typeof notifIntervalId !== 'undefined' && notifIntervalId) clearInterval(notifIntervalId);
-            if(typeof chatIntervalId !== 'undefined' && chatIntervalId) clearInterval(chatIntervalId);
+            if (typeof notifIntervalId !== 'undefined' && notifIntervalId) {
+                clearInterval(notifIntervalId);
+                notifIntervalId = null;
+            }
+            if (typeof chatIntervalId !== 'undefined' && chatIntervalId) {
+                clearInterval(chatIntervalId);
+                chatIntervalId = null;
+            }
             localStorage.removeItem('sush_curUser'); 
             localStorage.removeItem('sush_curEmail'); 
             localStorage.removeItem('sush_curAlias');
