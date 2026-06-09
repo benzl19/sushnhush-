@@ -323,17 +323,49 @@
                 const inputAns = prompt(infoPertanyaan);
                 if (!inputAns) return;
 
-                if (inputAns.trim().toLowerCase() === String(user.secret_answer).trim().toLowerCase()) {
-                    alert(lang === 'ID' 
-                        ? `Verifikasi Sukses!\n\nPassword Anda adalah: ${user.password}\n(Catatan: Segera ganti password Anda setelah masuk)` 
-                        : `Verification Successful!\n\nYour password is: ${user.password}\n(Note: Please change your password immediately upon login)`);
-                } else {
+                if (inputAns.trim().toLowerCase() !== String(user.secret_answer).trim().toLowerCase()) {
                     alert(lang === 'ID' ? "Jawaban salah! Akses pemulihan ditolak." : "Incorrect answer! Recovery access denied.");
+                    return;
                 }
+
+                const infoPassBaru = lang === 'ID'
+                    ? "Verifikasi Sukses!\n\nMasukkan Password Baru Anda\n(Minimal 6 karakter, gabungan huruf & angka):"
+                    : "Verification Successful!\n\nEnter Your New Password\n(Minimum 6 characters, combining letters & numbers):";
+
+                const passwordBaru = prompt(infoPassBaru);
+                if (!passwordBaru) return;
+
+                const passwordPattern = /^(?=.*[a-zA-Z])(?=.*\d).{6,}$/;
+                if (!passwordPattern.test(passwordBaru)) {
+                    alert(lang === 'ID' 
+                        ? "Akses Ditolak: Password baru harus terdiri dari minimal 6 karakter dan merupakan gabungan huruf serta angka!" 
+                        : "Access Denied: New password must be at least 6 characters and contain both letters and numbers!");
+                    return;
+                }
+
+                const urlPatch = SUPABASE_URL + '/rest/v1/users?id=eq.' + user.id;
+                const patchHeaders = Object.assign({}, reqHeaders, { 'Prefer': 'return=representation' });
+                const resPatch = await fetch(urlPatch, {
+                    method: 'PATCH',
+                    headers: patchHeaders,
+                    body: JSON.stringify({ password: passwordBaru })
+                });
+
+                if (!resPatch.ok) {
+                    const errObj = await resPatch.json();
+                    alert("System Error: " + errObj.message);
+                    return;
+                }
+
+                alert(lang === 'ID'
+                    ? "Password Anda berhasil diperbarui! Silakan masuk menggunakan password baru Anda."
+                    : "Your password has been successfully updated! Please log in using your new password.");
+
             } catch (err) {
                 alert("Error: " + err.message);
             }
         }
+
     </script>
 </body>
     </html>
