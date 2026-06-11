@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Retribution Contest - Fase 2</title>
+    <title>Retribution Contest - Fase 3</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         /* TEMA CYBERPUNK NEON */
@@ -51,7 +51,21 @@
             box-shadow: 0 0 10px rgba(69, 243, 255, 0.2);
         }
         button:active { transform: scale(0.96); background: var(--neon-cyan); color: var(--bg-color); }
+        button:disabled { border-color: #555; color: #555; cursor: not-allowed; box-shadow: none; }
+        
+        .btn-red { border-color: var(--neon-red); color: var(--neon-red); box-shadow: 0 0 10px rgba(255, 74, 74, 0.2); }
+        .btn-red:active { background: var(--neon-red); color: var(--bg-color); box-shadow: 0 0 20px var(--neon-red); }
         .btn-small { padding: 8px 12px; font-size: 12px; width: auto; margin-bottom: 0; }
+
+        input[type="text"] {
+            width: 100%; padding: 15px; background: transparent; border: 1px solid var(--dark-gray);
+            color: #fff; border-radius: 8px; margin-bottom: 15px; box-sizing: border-box; text-align: center; font-size: 18px; letter-spacing: 2px;
+        }
+        input[type="text"]:focus { outline: none; border-color: var(--neon-cyan); box-shadow: 0 0 10px rgba(69, 243, 255, 0.3); }
+
+        .versus-box { text-align: center; margin-bottom: 20px; }
+        .player-name { font-size: 20px; color: #fff; }
+        .vs-text { color: var(--neon-red); font-weight: bold; margin: 10px 0; }
     </style>
 </head>
 <body>
@@ -59,7 +73,7 @@
 
         <div id="view-main" class="view-panel active">
             <div class="top-nav">
-                <div style="color:#555; font-size:12px;">FASE 2</div>
+                <div style="color:#555; font-size:12px;">FASE 3</div>
                 <button type="button" class="btn-small" onclick="window.location.href='beranda.html'">Kembali</button>
             </div>
             
@@ -68,52 +82,71 @@
             <div class="panel-box">
                 <h3 style="margin-bottom:10px; color:var(--neon-cyan); text-align:center;">LEADERBOARD</h3>
                 <div id="leaderboardList">
-                    <div style="text-align:center; color:#555;">Mencari data...</div>
+                    <div style="text-align:center; color:#555;">Memuat data...</div>
                 </div>
             </div>
 
             <div style="text-align:center; margin-bottom: 15px; font-size: 14px;">
-                Bermain sebagai: <span id="displayUsername" style="color: var(--neon-green); font-weight:bold;">Mendeteksi...</span>
+                Bermain sebagai: <span id="displayUsername" style="color: var(--neon-green); font-weight:bold;">...</span>
             </div>
 
-            <button type="button" onclick="transisiLayar('view-main', 'view-lobby')">Siap, Main</button>
+            <button type="button" onclick="transisiLayar('view-main', 'view-lobby', 'maju')">Siap, Main</button>
         </div>
 
 
         <div id="view-lobby" class="view-panel">
             <div class="top-nav">
-                <button type="button" class="btn-small" onclick="transisiLayar('view-lobby', 'view-main')">← Back</button>
-                <div style="font-weight:bold; color:var(--neon-cyan);">LOBBY KOSONG</div>
+                <button type="button" class="btn-small" onclick="transisiLayar('view-lobby', 'view-main', 'mundur')">← Back</button>
+                <div style="font-weight:bold; color:var(--neon-cyan);">LOBBY</div>
                 <div style="width: 60px;"></div>
             </div>
 
-            <div class="panel-box" style="display: flex; flex-direction: column; justify-content: center; text-align: center; flex-grow: 1;">
-                <h2 style="color: var(--neon-green); margin-bottom: 20px;">KONEKSI SUKSES</h2>
-                <p style="font-size: 14px; color:#c5c6c7;">
-                    Database B sudah diinisialisasi di latar belakang tanpa merusak navigasi.<br><br>
-                    Silakan mundur kembali ke Menu Utama.
-                </p>
+            <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
+                <button type="button" onclick="buatRoom()">Buat Room Baru</button>
+                <div style="text-align: center; margin: 20px 0; color: #555;">- ATAU -</div>
+                <input type="text" id="inputRoomId" placeholder="Masukkan ID Room" maxlength="10" autocomplete="off">
+                <button type="button" class="btn-red" onclick="joinRoom()">Join Room</button>
             </div>
+        </div>
+
+
+        <div id="view-room" class="view-panel">
+            <div class="top-nav">
+                <button type="button" class="btn-small" id="btnLeaveRoom" onclick="tinggalkanRoom()">← Keluar</button>
+                <div style="font-weight:bold; color:var(--neon-cyan);" id="displayRoomId">SH-0000</div>
+                <button type="button" class="btn-small" onclick="salinRoomId()">Salin ID</button>
+            </div>
+
+            <div class="panel-box" style="display: flex; flex-direction: column; justify-content: center;">
+                <div class="versus-box">
+                    <div class="player-name" id="p1NameRoom">Pemain 1</div>
+                    <div class="vs-text">VS</div>
+                    <div class="player-name" id="p2NameRoom" style="color:#555;">Menunggu Lawan...</div>
+                </div>
+                <div style="text-align:center; margin-top:20px; font-weight:bold; color:var(--neon-cyan);" id="roomStatusText">
+                    Menunggu pemain bergabung...
+                </div>
+            </div>
+
+            <button type="button" id="btnReady" disabled>READY (Tahap Selanjutnya)</button>
         </div>
 
     </div>
         <script>
         // ========================================================
-        // 1. FUNGSI NAVIGASI VISUAL (TETAP SAMA SEPERTI FASE 1)
+        // 1. FUNGSI NAVIGASI CERDAS (Maju & Mundur)
         // ========================================================
-        function transisiLayar(idAsal, idTujuan) {
+        function transisiLayar(idAsal, idTujuan, arah = 'maju') {
             const layarAsal = document.getElementById(idAsal);
             const layarTujuan = document.getElementById(idTujuan);
-
             if (!layarAsal || !layarTujuan) return;
 
-            if (idAsal === 'view-main' && idTujuan === 'view-lobby') {
+            if (arah === 'maju') {
                 layarAsal.classList.remove('active');
                 layarAsal.classList.add('slide-left');
                 layarTujuan.classList.remove('slide-left');
                 layarTujuan.classList.add('active');
-            } 
-            else if (idAsal === 'view-lobby' && idTujuan === 'view-main') {
+            } else {
                 layarAsal.classList.remove('active');
                 layarTujuan.classList.remove('slide-left');
                 layarTujuan.classList.add('active');
@@ -121,66 +154,174 @@
         }
 
         // ========================================================
-        // 2. SETUP IDENTITAS & DUAL CLOUD SUPABASE
+        // 2. SETUP IDENTITAS & CLOUD B
         // ========================================================
-        let supabaseA = null; // Disiapkan untuk koneksi langsung ke SUSHNHUSH (jika butuh)
-        let supabaseB = null; // Koneksi mutlak untuk Retribution Room
-        
-        // Mengambil identitas dari penyimpanan lokal (Cloud A)
+        let supabaseB = null; 
+        let roomChannel = null;
+        let currentRoomId = null;
+        let p1Name = '';
+        let p2Name = '';
+        let myRole = null;
+
         const myUsername = localStorage.getItem('sush_curAlias') || 'Guest_' + Math.floor(Math.random() * 1000);
 
         try {
             if (window.supabase) {
-                // Inisialisasi Cloud B (Server Singapura)
                 const URL_B = 'https://znbyjoapajjonerfannn.supabase.co';
                 const KEY_B = 'sb_publishable_ELkRTe17wW5hk7kR6mw3SA_jmq4L8fZ';
                 supabaseB = window.supabase.createClient(URL_B, KEY_B);
-                
-                // Jika nanti Anda butuh menembak tabel di Cloud A, kita bisa inisialisasi supabaseA di sini.
             }
         } catch (e) {
             console.error("Gagal menghubungkan Supabase B:", e);
         }
 
         // ========================================================
-        // 3. FUNGSI AMBIL DATA LEADERBOARD DENGAN AMAN
+        // 3. FUNGSI PEMBUATAN & GABUNG ROOM
         // ========================================================
-        async function ambilLeaderboard() {
-            const wadahList = document.getElementById('leaderboardList');
-            if (!supabaseB) {
-                wadahList.innerHTML = '<div style="text-align:center; color:#ff4a4a;">Koneksi Database B Terputus</div>';
-                return;
-            }
+        function generateRoomId() {
+            return 'SH-' + Math.floor(1000 + Math.random() * 9000);
+        }
 
+        function updateRoomUI() {
+            document.getElementById('displayRoomId').innerText = currentRoomId;
+            document.getElementById('p1NameRoom').innerText = p1Name;
+            
+            if (p2Name) {
+                document.getElementById('p2NameRoom').innerText = p2Name;
+                document.getElementById('p2NameRoom').style.color = '#fff';
+                document.getElementById('roomStatusText').innerText = 'Lawan telah masuk!';
+            } else {
+                document.getElementById('p2NameRoom').innerText = 'Menunggu Lawan...';
+                document.getElementById('p2NameRoom').style.color = '#555';
+                document.getElementById('roomStatusText').innerText = 'Menunggu pemain bergabung...';
+            }
+        }
+
+        async function buatRoom() {
+            if (!supabaseB) { alert('Sistem Database Terputus!'); return; }
+            
+            const btn = event.target;
+            btn.innerText = 'Membuat...'; btn.disabled = true;
+
+            const newId = generateRoomId();
             try {
-                // Proses mengambil data dari Cloud B
-                const { data, error } = await supabaseB.from('retri_leaderboard').select('*').order('wins', { ascending: false }).limit(5);
+                // Tembak ke Supabase B
+                const { error } = await supabaseB.from('retri_rooms').insert([
+                    { id: newId, p1_username: myUsername, status: 'waiting' }
+                ]);
                 
                 if (error) throw error;
 
+                // Sukses
+                currentRoomId = newId; myRole = 'p1'; p1Name = myUsername; p2Name = '';
+                updateRoomUI();
+                transisiLayar('view-lobby', 'view-room', 'maju');
+                subscribeKeRoom(newId);
+
+            } catch (err) {
+                alert('Gagal membuat room: ' + err.message);
+            } finally {
+                btn.innerText = 'Buat Room Baru'; btn.disabled = false;
+            }
+        }
+
+        async function joinRoom() {
+            if (!supabaseB) { alert('Sistem Database Terputus!'); return; }
+            
+            const inputElement = document.getElementById('inputRoomId');
+            const inputId = inputElement.value.trim().toUpperCase();
+            if (!inputId) { alert('Masukkan ID Room dulu!'); return; }
+
+            const btn = event.target;
+            btn.innerText = 'Mencari...'; btn.disabled = true;
+
+            try {
+                // Cari data room
+                const { data, error: fetchErr } = await supabaseB.from('retri_rooms').select('*').eq('id', inputId).single();
+                if (fetchErr || !data) throw new Error('Room tidak ditemukan!');
+                if (data.p2_username) throw new Error('Room sudah penuh!');
+
+                // Update room dengan nama kita
+                const { error: updateErr } = await supabaseB.from('retri_rooms').update({ 
+                    p2_username: myUsername, status: 'full' 
+                }).eq('id', inputId);
+                
+                if (updateErr) throw updateErr;
+
+                // Sukses masuk
+                currentRoomId = inputId; myRole = 'p2'; 
+                p1Name = data.p1_username; p2Name = myUsername;
+                
+                updateRoomUI();
+                transisiLayar('view-lobby', 'view-room', 'maju');
+                subscribeKeRoom(inputId);
+
+            } catch (err) {
+                alert(err.message);
+            } finally {
+                btn.innerText = 'Join Room'; btn.disabled = false;
+                inputElement.value = ''; // Bersihkan input
+            }
+        }
+
+        function salinRoomId() {
+            if (!currentRoomId) return;
+            navigator.clipboard.writeText(currentRoomId);
+            alert('ID Disalin: ' + currentRoomId);
+        }
+
+        function tinggalkanRoom() {
+            if (roomChannel && supabaseB) supabaseB.removeChannel(roomChannel);
+            currentRoomId = null; p1Name = ''; p2Name = ''; myRole = null;
+            transisiLayar('view-room', 'view-lobby', 'mundur');
+        }
+
+        // ========================================================
+        // 4. SUPABASE REALTIME LISTENER (DETEKSI LAWAN)
+        // ========================================================
+        function subscribeKeRoom(roomId) {
+            if (!supabaseB) return;
+            if (roomChannel) supabaseB.removeChannel(roomChannel);
+            
+            roomChannel = supabaseB.channel('room_' + roomId)
+            .on(
+                'postgres_changes', 
+                { event: 'UPDATE', schema: 'public', table: 'retri_rooms', filter: 'id=eq.' + roomId }, 
+                (payload) => {
+                    const newData = payload.new;
+                    // Jika ada p2_username masuk dan kita belum tau
+                    if (newData.p2_username && !p2Name) { 
+                        p2Name = newData.p2_username; 
+                        updateRoomUI(); 
+                    }
+                }
+            ).subscribe();
+        }
+
+        // ========================================================
+        // 5. LEADERBOARD (WARISAN FASE 2)
+        // ========================================================
+        async function ambilLeaderboard() {
+            if (!supabaseB) return;
+            try {
+                const { data, error } = await supabaseB.from('retri_leaderboard').select('*').order('wins', { ascending: false }).limit(5);
+                if (error) throw error;
                 if (data && data.length > 0) {
                     let html = '';
                     data.forEach((r, i) => {
                         html += `<div class="leaderboard-item"><span>#${i+1} ${r.username}</span><span>${r.wins} Win</span></div>`;
                     });
-                    wadahList.innerHTML = html;
+                    document.getElementById('leaderboardList').innerHTML = html;
                 } else {
-                    wadahList.innerHTML = '<div style="text-align:center; color:#555;">Belum ada juara</div>';
+                    document.getElementById('leaderboardList').innerHTML = '<div style="text-align:center; color:#555;">Belum ada juara</div>';
                 }
             } catch (err) {
-                console.error("Error Leaderboard:", err);
-                wadahList.innerHTML = '<div style="text-align:center; color:#ff4a4a;">Gagal Memuat Data.</div>';
+                document.getElementById('leaderboardList').innerHTML = '<div style="text-align:center; color:#555;">Gagal Memuat Data.</div>';
             }
         }
 
-        // ========================================================
-        // 4. TRIGGER AMAN SETELAH DOM SELESAI DIGAMBAR
-        // ========================================================
         window.addEventListener('DOMContentLoaded', () => {
-            // Tampilkan identitas di UI
             document.getElementById('displayUsername').innerText = myUsername;
-            
-            // Muat leaderboard secara asinkron (tidak memblokir klik)
             ambilLeaderboard();
         });
     </script>
