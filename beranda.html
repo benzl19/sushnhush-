@@ -5,10 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SushnHush - Main Hub</title>
     <link rel="stylesheet" href="style-global.css">
+    <style>
+        /* Gaya Tombol Games Neon Terisolasi */
+        .btn-games-nav {
+            background: transparent;
+            border: 1px solid #45f3ff;
+            color: #45f3ff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 0 8px rgba(69, 243, 255, 0.2);
+            margin-left: 10px;
+            display: inline-block;
+        }
+        .btn-games-nav:active {
+            transform: scale(0.95);
+            background: #45f3ff;
+            color: #0b0c10;
+            box-shadow: 0 0 15px #45f3ff;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <div class="main-hub show-flex fade-in" id="mainHub" style="display: flex; opacity: 1; transform: translateX(0);">
+            
             <div class="hub-header">
                 <h2 class="hub-title" onclick="if(typeof toggleMenuPanel === 'function') toggleMenuPanel('notif')">
                     <svg class="svg-logo-hub" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
@@ -19,13 +45,14 @@
                     <span>SUSHNHUSH</span><span id="titleBadge" class="neon-dot" style="display:none; margin-left:2px;">°</span>
                 </h2>
                 
+                <button class="btn-games-nav" onclick="window.location.href='retri.html'">[ GAMES ]</button>
+
                 <div class="hub-nav-group">
                     <button class="nav-btn" id="navBtnProfile" onclick="if(typeof toggleMenuPanel === 'function') toggleMenuPanel('profile')"></button>
-                    <button class="nav-btn" id="navBtnList" onclick="if(typeof toggleMenuPanel === 'function') toggleMenuPanel('list')"></button>
-                    <button class="nav-btn-action" id="navBtnAction" onclick="if(typeof toggleMenuPanel === 'function') toggleMenuPanel('action')">+</button>
-                    <button class="btn-logout" id="btnLogout" onclick="logoutSistem()"></button>
+                    <button class="nav-btn" id="navBtnCreateGroup" onclick="bukaPanelBuatGrup()"></button>
+                    <button class="nav-btn" id="navBtnJoinGroup" onclick="bukaPanelJoinGrup()"></button>
                 </div>
-            </div>
+            </div> 
 
             <div class="roll-down-panel" id="universalDropdown">
                 <div class="roll-down-content" id="universalDropdownContent"></div>
@@ -36,6 +63,15 @@
             <div class="chat-list" id="hubChatList">
                 <div class="empty-state" id="emptyChatText"></div>
             </div>
+
+            <div class="hub-footer" style="margin-top: auto; display: flex; justify-content: space-between; align-items: center; padding-top: 10px;">
+                <div class="hub-nav-group" style="width: 100%; display: flex; justify-content: space-between;">
+                    <button class="nav-btn" id="navBtnList" onclick="if(typeof toggleMenuPanel === 'function') toggleMenuPanel('list')"></button>
+                    <button class="nav-btn-action" id="navBtnAction" onclick="if(typeof toggleMenuPanel === 'function') toggleMenuPanel('action')">+</button>
+                    <button class="btn-logout" id="btnLogout" onclick="logoutSistem()"></button>
+                </div>
+            </div>
+
         </div>
     </div> 
 
@@ -65,15 +101,17 @@
     </div>
 
     <script src="app-global.js"></script>
-        <script>
+    <script>
         window.addEventListener('load', function() {
             if (!localStorage.getItem('sush_curEmail')) {
                 window.location.href = 'index.html';
                 return;
             }
-            initBeranda();
+            if (typeof initBeranda === "function") {
+                initBeranda();
+            }
         });
-
+    
         function initBeranda() {
             var lang = localStorage.getItem('sush_lang');
             if (!lang || (lang !== 'ID' && lang !== 'EN')) { 
