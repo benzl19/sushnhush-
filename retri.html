@@ -6,7 +6,7 @@
     <title>Retribution Contest</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* CSS Variabel & Tema Cyberpunk Neon */
+        /* Tema Cyberpunk Neon */
         :root {
             --bg-color: #0b0c10;
             --text-color: #c5c6c7;
@@ -22,9 +22,8 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            overflow: hidden;
             width: 100vw;
-            height: 100dvh;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
         }
@@ -32,38 +31,26 @@
         .container {
             width: 100%;
             max-width: 420px;
-            height: 100%;
-            position: relative;
+            min-height: 100vh;
             background-color: var(--bg-color);
             box-shadow: 0 0 20px rgba(69, 243, 255, 0.05);
         }
 
-        /* PERBAIKAN CSS: Menggunakan visibility untuk mencegah blokir sensor klik */
+        /* --- METODE BUKA-TUTUP (ANTI MACET) --- */
         .view-panel {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
+            display: none; /* Semua halaman mati secara default */
             flex-direction: column;
             box-sizing: border-box;
             padding: 20px;
-            background-color: var(--bg-color);
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            transform: translateX(100%);
-            opacity: 0;
-            visibility: hidden; /* Matikan panel sepenuhnya jika tidak aktif */
-            z-index: 1;
+            width: 100%;
+            min-height: 100vh;
+        }
+        
+        #view-main {
+            display: flex; /* HANYA halaman utama yang hidup di awal */
         }
 
-        .view-panel.active {
-            transform: translateX(0);
-            opacity: 1;
-            visibility: visible; /* Hidupkan kembali saat aktif */
-            z-index: 2;
-        }
-
+        /* --- TIPOGRAFI & TOMBOL --- */
         h1, h2, h3 { margin: 0; font-weight: 600; text-align: center; }
         .title-neon {
             color: #fff;
@@ -84,7 +71,6 @@
             cursor: pointer;
             text-transform: uppercase;
             letter-spacing: 1px;
-            transition: all 0.2s;
             box-shadow: 0 0 10px rgba(69, 243, 255, 0.2);
             width: 100%;
             margin-bottom: 15px;
@@ -102,148 +88,47 @@
             color: #555;
             box-shadow: none;
             cursor: not-allowed;
-            transform: none;
             background: transparent;
         }
 
-        .btn-red {
-            border-color: var(--neon-red);
-            color: var(--neon-red);
-            box-shadow: 0 0 10px rgba(255, 74, 74, 0.2);
-        }
-        .btn-red:active {
-            background: var(--neon-red);
-            color: var(--bg-color);
-            box-shadow: 0 0 20px var(--neon-red);
-        }
-
-        .btn-small {
-            padding: 8px 12px;
-            font-size: 12px;
-            width: auto;
-            margin-bottom: 0;
-        }
-
-        .top-nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-
-        .panel-box {
-            background: rgba(31, 40, 51, 0.5);
-            border: 1px solid var(--dark-gray);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 20px;
-            overflow-y: auto;
-            flex-grow: 1;
-        }
-
-        .leaderboard-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px dashed var(--dark-gray);
-        }
+        .btn-red { border-color: var(--neon-red); color: var(--neon-red); box-shadow: 0 0 10px rgba(255, 74, 74, 0.2); }
+        .btn-red:active { background: var(--neon-red); color: var(--bg-color); box-shadow: 0 0 20px var(--neon-red); }
+        .btn-small { padding: 8px 12px; font-size: 12px; width: auto; margin-bottom: 0; }
+        .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .panel-box { background: rgba(31, 40, 51, 0.5); border: 1px solid var(--dark-gray); border-radius: 10px; padding: 15px; margin-bottom: 20px; overflow-y: auto; flex-grow: 1; }
+        .leaderboard-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--dark-gray); }
 
         input[type="text"] {
-            width: 100%;
-            padding: 15px;
-            background: transparent;
-            border: 1px solid var(--dark-gray);
-            color: #fff;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            box-sizing: border-box;
-            text-align: center;
-            font-size: 18px;
-            letter-spacing: 2px;
+            width: 100%; padding: 15px; background: transparent; border: 1px solid var(--dark-gray);
+            color: #fff; border-radius: 8px; margin-bottom: 15px; box-sizing: border-box; text-align: center; font-size: 18px;
         }
-        input[type="text"]:focus {
-            outline: none;
-            border-color: var(--neon-cyan);
-            box-shadow: 0 0 10px rgba(69, 243, 255, 0.3);
-        }
+        input[type="text"]:focus { outline: none; border-color: var(--neon-cyan); box-shadow: 0 0 10px rgba(69, 243, 255, 0.3); }
 
+        /* --- MEKANIK GAME --- */
         .versus-box { text-align: center; margin-bottom: 20px; }
         .player-name { font-size: 20px; color: #fff; }
         .vs-text { color: var(--neon-red); font-weight: bold; margin: 10px 0; }
-        
         .dots-container { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
         .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--dark-gray); }
         .dot-win { background: var(--neon-green); box-shadow: 0 0 8px var(--neon-green); }
         .dot-lose { background: var(--neon-red); box-shadow: 0 0 8px var(--neon-red); }
+        .monster-name { text-align: center; font-size: 24px; color: var(--neon-cyan); margin-top: 20px; letter-spacing: 2px; }
 
-        .monster-name {
-            text-align: center;
-            font-size: 24px;
-            color: var(--neon-cyan);
-            margin-top: 20px;
-            letter-spacing: 2px;
-        }
-
-        .health-bar-container {
-            width: 100%;
-            height: 40px;
-            background: var(--dark-gray);
-            border: 2px solid #555;
-            border-radius: 20px;
-            margin: 20px 0;
-            position: relative;
-            overflow: hidden;
-        }
+        .health-bar-container { width: 100%; height: 40px; background: var(--dark-gray); border: 2px solid #555; border-radius: 20px; margin: 20px 0; position: relative; overflow: hidden; }
+        .health-bar-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #ff4a4a, #ff9e9e); transition: width 0.1s linear; }
+        .health-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; font-weight: bold; font-size: 18px; text-shadow: 1px 1px 2px #000; }
+        .limit-marker { position: absolute; top: 0; height: 100%; width: 2px; background: var(--neon-green); box-shadow: 0 0 10px var(--neon-green); z-index: 2; }
         
-        .health-bar-fill {
-            height: 100%;
-            width: 100%;
-            background: linear-gradient(90deg, #ff4a4a, #ff9e9e);
-            transition: width 0.1s linear;
-        }
+        .btn-retri { height: 100px; font-size: 32px; border-radius: 20px; margin-top: auto; margin-bottom: 20px; }
+        .countdown-text { text-align: center; font-size: 60px; color: var(--neon-red); font-weight: bold; text-shadow: 0 0 20px var(--neon-red); margin: 20px 0; }
 
-        .health-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #fff;
-            font-weight: bold;
-            font-size: 18px;
-            text-shadow: 1px 1px 2px #000;
-        }
-
-        .limit-marker {
-            position: absolute;
-            top: 0;
-            height: 100%;
-            width: 2px;
-            background: var(--neon-green);
-            box-shadow: 0 0 10px var(--neon-green);
-            z-index: 2;
-        }
-
-        .btn-retri {
-            height: 100px;
-            font-size: 32px;
-            border
-            <body>
-    <script>
-        function navigasiAman(targetViewId) {
-            const panels = document.querySelectorAll('.view-panel');
-            panels.forEach(p => {
-                p.classList.remove('active');
-            });
-            const target = document.getElementById(targetViewId);
-            if (target) {
-                target.classList.add('active');
-            }
-        }
-    </script>
-
+        #resultOverlay { display: none; position: absolute; top: 0; left: 0; width: 100%; min-height: 100vh; background: rgba(11, 12, 16, 0.95); flex-direction: column; justify-content: center; align-items: center; z-index: 10; }
+    </style>
+</head>
+<body>
     <div class="container">
 
-        <div id="view-main" class="view-panel active">
+        <div id="view-main" class="view-panel">
             <div class="top-nav">
                 <div id="langIndicator" style="color:#555; font-size:12px;">ID</div>
                 <button type="button" class="btn-small" onclick="window.location.href='beranda.html'" id="btnBackShh1">Kembali ke SushnHush</button>
@@ -263,7 +148,7 @@
                 2. HP Lord akan turun otomatis.<br>
                 3. Tekan [RETRI] saat HP berada di bawah batas.<br>
                 4. Pemain dengan timing paling akurat menang.<br>
-                5. Menekan terlalu cepat (EARLY) bisa berakibat fatal.
+                5. Menekan terlalu cepat (EARLY) fatal.
             </div>
 
             <button type="button" onclick="navigasiAman('view-lobby')">Siap, Main</button>
@@ -297,7 +182,7 @@
                     <div class="vs-text">VS</div>
                     <div class="player-name" id="p2NameRoom" style="color:#555;">Menunggu Lawan...</div>
                 </div>
-                <div style="text-align:center; margin-top:20px; font-weight:bold;" id="roomStatusText">Menunggu pemain bergabung...</div>
+                <div style="text-align:center; margin-top:20px; font-weight:bold;" id="roomStatusText">Menunggu...</div>
             </div>
 
             <button type="button" id="btnReady" disabled onclick="setReady()">READY</button>
@@ -340,16 +225,28 @@
             <button type="button" class="btn-retri btn-red" id="btnActionRetri" disabled onclick="eksekusiRetri()">RETRI</button>
         </div>
 
-        <div class="result-overlay" id="resultOverlay">
+        <div id="resultOverlay">
             <h1 class="title-neon" id="resultTitle">GAME OVER</h1>
-            <div style="font-size:24px; margin-bottom:30px;" id="resultWinnerText">Pemenang: -</div>
+            <div style="font-size:24px; margin-bottom:30px; color:#fff;" id="resultWinnerText">Pemenang: -</div>
             <button type="button" onclick="kembaliKeLobby()" style="width:80%; max-width:300px;">Kembali ke Lobby</button>
             <button type="button" onclick="window.location.href='beranda.html'" class="btn-red" style="width:80%; max-width:300px;">Kembali ke SushnHush</button>
         </div>
 
     </div>
-            <script>
-        // --- 1. DEKLARASI VARIABEL UTAMA ---
+        <script>
+        // --- 1. SAKLAR NAVIGASI ANTI MACET ---
+        function navigasiAman(targetId) {
+            // Matikan semua layar secara absolut
+            document.getElementById('view-main').style.display = 'none';
+            document.getElementById('view-lobby').style.display = 'none';
+            document.getElementById('view-room').style.display = 'none';
+            document.getElementById('view-arena').style.display = 'none';
+            
+            // Nyalakan hanya layar yang diminta
+            document.getElementById(targetId).style.display = 'flex';
+        }
+
+        // --- 2. DEKLARASI VARIABEL GAME ---
         let supabase = null;
         let myUsername = localStorage.getItem('sush_curAlias') || 'UnknownNinja';
         let currentRoomId = null;
@@ -378,7 +275,7 @@
             5: { hp: 30000, limit: 3000 }
         };
 
-        // --- 2. KONEKSI SUPABASE AMAN ---
+        // --- 3. KONEKSI SUPABASE ---
         try {
             const SUPABASE_URL = 'https://znbyjoapajjonerfannn.supabase.co';
             const SUPABASE_KEY = 'sb_publishable_ELkRTe17wW5hk7kR6mw3SA_jmq4L8fZ';
@@ -386,68 +283,53 @@
                 supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             }
         } catch (e) {
-            console.error("Koneksi Supabase B diblokir browser:", e);
+            console.error("Koneksi Supabase Gagal:", e);
         }
 
-        // --- 3. PENGATURAN BAHASA LOKAL ---
+        // --- 4. BAHASA ---
         const lang = localStorage.getItem('sush_lang') || 'ID';
         if(lang === 'EN') {
             document.getElementById('langIndicator').innerText = 'EN';
             document.getElementById('btnBackShh1').innerText = 'Back to SushnHush';
         }
 
-        // --- 4. LOGIKA PERMAINAN & LOBBY ENGINE ---
+        // --- 5. LOGIKA LOBBY & GAME ---
         function generateRoomId() {
             return 'SH-' + Math.floor(1000 + Math.random() * 9000);
         }
 
         async function buatRoom() {
-            if (!supabase) { alert('Database tidak siap! Periksa koneksi internet Anda.'); return; }
+            if (!supabase) { alert('Database offline!'); return; }
             const newId = generateRoomId();
             const { error } = await supabase.from('retri_rooms').insert([
                 { id: newId, p1_username: myUsername, status: 'waiting' }
             ]);
             
-            if (error) { alert('Gagal membuat room: ' + error.message); return; }
+            if (error) { alert('Gagal buat room: ' + error.message); return; }
 
-            currentRoomId = newId;
-            myRole = 'p1';
-            p1Name = myUsername;
-            p2Name = '';
-            
-            updateRoomUI();
-            navigasiAman('view-room');
-            subscribeKeRoom(newId);
+            currentRoomId = newId; myRole = 'p1'; p1Name = myUsername; p2Name = '';
+            updateRoomUI(); navigasiAman('view-room'); subscribeKeRoom(newId);
         }
 
         async function joinRoom() {
-            if (!supabase) { alert('Database tidak siap!'); return; }
+            if (!supabase) { alert('Database offline!'); return; }
             const inputId = document.getElementById('inputRoomId').value.trim().toUpperCase();
             if (!inputId) return;
 
             const { data, error: fetchErr } = await supabase.from('retri_rooms').select('*').eq('id', inputId).single();
-            if (fetchErr || !data) { alert('Room tidak ditemukan!'); return; }
-            if (data.p2_username) { alert('Room sudah penuh!'); return; }
+            if (fetchErr || !data) { alert('Room tidak ada!'); return; }
+            if (data.p2_username) { alert('Room penuh!'); return; }
 
-            const { error: updateErr } = await supabase.from('retri_rooms')
-                .update({ p2_username: myUsername, status: 'full' })
-                .eq('id', inputId);
+            const { error: updateErr } = await supabase.from('retri_rooms').update({ p2_username: myUsername, status: 'full' }).eq('id', inputId);
+            if (updateErr) { alert('Gagal join.'); return; }
 
-            if (updateErr) { alert('Gagal bergabung.'); return; }
-
-            currentRoomId = inputId;
-            myRole = 'p2';
-            p1Name = data.p1_username;
-            p2Name = myUsername;
-
-            updateRoomUI();
-            navigasiAman('view-room');
-            subscribeKeRoom(inputId);
+            currentRoomId = inputId; myRole = 'p2'; p1Name = data.p1_username; p2Name = myUsername;
+            updateRoomUI(); navigasiAman('view-room'); subscribeKeRoom(inputId);
         }
 
         function salinRoomId() {
             navigator.clipboard.writeText(currentRoomId);
-            alert('ID Disalin: ' + currentRoomId);
+            alert('Disalin: ' + currentRoomId);
         }
 
         function updateRoomUI() {
@@ -462,28 +344,18 @@
             if (!supabase) return;
             if (roomChannel) supabase.removeChannel(roomChannel);
             
-            roomChannel = supabase.channel('room_' + roomId, {
-                config: { broadcast: { self: true } }
-            });
-
+            roomChannel = supabase.channel('room_' + roomId, { config: { broadcast: { self: true } } });
             roomChannel.on('broadcast', { event: 'ready_state' }, (payload) => {
                 if (payload.payload.role === 'p1') bothReady.p1 = true;
                 if (payload.payload.role === 'p2') bothReady.p2 = true;
                 
-                if (bothReady.p1 && bothReady.p2) {
-                    mulaiSiklusRonde();
-                } else {
-                    document.getElementById('roomStatusText').innerText = 
-                        (payload.payload.role === myRole) ? 'Menunggu lawan ready...' : 'Lawan sudah siap!';
-                }
+                if (bothReady.p1 && bothReady.p2) mulaiSiklusRonde();
+                else document.getElementById('roomStatusText').innerText = (payload.payload.role === myRole) ? 'Menunggu lawan ready...' : 'Lawan sudah siap!';
             });
 
             roomChannel.on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'retri_rooms', filter: 'id=eq.'+roomId }, (payload) => {
                 const newData = payload.new;
-                if (newData.p2_username && !p2Name) {
-                    p2Name = newData.p2_username;
-                    updateRoomUI();
-                }
+                if (newData.p2_username && !p2Name) { p2Name = newData.p2_username; updateRoomUI(); }
                 if (newData.p1_scores.length === currentRound && newData.p2_scores.length === currentRound && isPlaying) {
                     evaluasiPemenangRonde(newData.p1_scores[currentRound-1], newData.p2_scores[currentRound-1]);
                 }
@@ -497,8 +369,7 @@
         }
 
         function mulaiSiklusRonde() {
-            bothReady = { p1: false, p2: false };
-            isPlaying = true;
+            bothReady = { p1: false, p2: false }; isPlaying = true;
             navigasiAman('view-arena');
             
             document.getElementById('arenaRoomId').innerText = currentRoomId;
@@ -527,14 +398,12 @@
         function jalankanHitungMundur() {
             const cdDisplay = document.getElementById('countdownDisplay');
             cdDisplay.style.display = 'block';
-            let count = 5;
-            cdDisplay.innerText = count;
+            let count = 5; cdDisplay.innerText = count;
 
             const interval = setInterval(() => {
                 count--;
-                if (count > 0) {
-                    cdDisplay.innerText = count;
-                } else {
+                if (count > 0) cdDisplay.innerText = count;
+                else {
                     clearInterval(interval);
                     cdDisplay.style.display = 'none';
                     document.getElementById('btnActionRetri').disabled = false;
@@ -557,15 +426,12 @@
             document.getElementById('hpText').innerText = currentHp;
             document.getElementById('hpBarFill').style.width = ((currentHp / maxHp) * 100) + '%';
 
-            if (progress < 1) {
-                gameAnimFrame = requestAnimationFrame(updateDarah);
-            } else {
+            if (progress < 1) gameAnimFrame = requestAnimationFrame(updateDarah);
+            else {
                 currentHp = 0;
                 document.getElementById('hpText').innerText = '0';
                 document.getElementById('hpBarFill').style.width = '0%';
-                if (document.getElementById('btnActionRetri').disabled === false) {
-                    eksekusiRetri(true);
-                }
+                if (document.getElementById('btnActionRetri').disabled === false) eksekusiRetri(true);
             }
         }
 
@@ -585,22 +451,15 @@
         }
 
         function evaluasiPemenangRonde(p1Score, p2Score) {
-            isPlaying = false;
-            let roundWinner = null;
+            isPlaying = false; let roundWinner = null;
 
-            if (p1Score.status === 'SECURED' && p2Score.status === 'SECURED') {
-                roundWinner = (p1Score.hp > p2Score.hp) ? 'p1' : 'p2';
-            } else if (p1Score.status === 'SECURED' && p2Score.status !== 'SECURED') {
-                roundWinner = 'p1';
-            } else if (p2Score.status === 'SECURED' && p1Score.status !== 'SECURED') {
-                roundWinner = 'p2';
-            } else if (p1Score.status === 'EARLY' && p2Score.status === 'EARLY') {
-                const diff1 = p1Score.hp - retriLimit;
-                const diff2 = p2Score.hp - retriLimit;
+            if (p1Score.status === 'SECURED' && p2Score.status === 'SECURED') roundWinner = (p1Score.hp > p2Score.hp) ? 'p1' : 'p2';
+            else if (p1Score.status === 'SECURED' && p2Score.status !== 'SECURED') roundWinner = 'p1';
+            else if (p2Score.status === 'SECURED' && p1Score.status !== 'SECURED') roundWinner = 'p2';
+            else if (p1Score.status === 'EARLY' && p2Score.status === 'EARLY') {
+                const diff1 = p1Score.hp - retriLimit; const diff2 = p2Score.hp - retriLimit;
                 roundWinner = (diff1 < diff2) ? 'p1' : 'p2';
-            } else {
-                roundWinner = (p1Score.hp > p2Score.hp) ? 'p1' : 'p2';
-            }
+            } else roundWinner = (p1Score.hp > p2Score.hp) ? 'p1' : 'p2';
 
             if (roundWinner === 'p1') p1Wins++; else p2Wins++;
             updateTampilanDots();
@@ -623,9 +482,7 @@
                 const container = document.getElementById(containerId);
                 if (!container) return;
                 const dots = container.children;
-                for(let i=0; i<3; i++) {
-                    if(dots[i]) dots[i].className = 'dot ' + (i < wins ? 'dot-win' : 'dot-empty');
-                }
+                for(let i=0; i<3; i++) { if(dots[i]) dots[i].className = 'dot ' + (i < wins ? 'dot-win' : 'dot-empty'); }
             };
             updateDots('p1Dots', p1Wins); updateDots('p2Dots', p2Wins);
         }
@@ -633,7 +490,7 @@
         async function selesaikanGame(winnerRole) {
             const winnerName = winnerRole === 'p1' ? p1Name : p2Name;
             document.getElementById('resultWinnerText').innerText = 'Pemenang: ' + winnerName;
-            document.getElementById('resultOverlay').classList.add('show');
+            document.getElementById('resultOverlay').style.display = 'flex';
 
             if (myRole === 'p1' && supabase) {
                 await supabase.from('retri_rooms').update({ status: 'finished', winner_username: winnerName }).eq('id', currentRoomId);
@@ -652,16 +509,13 @@
         }
 
         function kembaliKeLobby() {
-            document.getElementById('resultOverlay').classList.remove('show');
+            document.getElementById('resultOverlay').style.display = 'none';
             currentRound = 1; p1Wins = 0; p2Wins = 0;
             updateTampilanDots(); tinggalkanRoom();
         }
 
         async function muatLeaderboard() {
-            if (!supabase) {
-                document.getElementById('leaderboardList').innerHTML = '<div style="text-align:center; color:#555;">Sistem Leaderboard Offline</div>';
-                return;
-            }
+            if (!supabase) { document.getElementById('leaderboardList').innerHTML = '<div style="text-align:center; color:#555;">Sistem Leaderboard Offline</div>'; return; }
             try {
                 const { data } = await supabase.from('retri_leaderboard').select('*').order('wins', { ascending: false }).limit(5);
                 if(data && data.length > 0) {
@@ -676,4 +530,3 @@
     </script>
 </body>
 </html>
-            
