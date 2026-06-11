@@ -45,14 +45,18 @@
                     <span>SUSHNHUSH</span><span id="titleBadge" class="neon-dot" style="display:none; margin-left:2px;">°</span>
                 </h2>
                 
+                <!-- Tombol Games Berhasil Disisipkan -->
                 <button class="btn-games-nav" onclick="window.location.href='retri.html'">[ GAMES ]</button>
 
+                <!-- Mengembalikan grup tombol asli agar initBeranda() tidak error -->
                 <div class="hub-nav-group">
                     <button class="nav-btn" id="navBtnProfile" onclick="if(typeof toggleMenuPanel === 'function') toggleMenuPanel('profile')"></button>
-                    <button class="nav-btn" id="navBtnCreateGroup" onclick="bukaPanelBuatGrup()"></button>
-                    <button class="nav-btn" id="navBtnJoinGroup" onclick="bukaPanelJoinGrup()"></button>
+                    <button class="nav-btn" id="navBtnList" onclick="if(typeof toggleMenuPanel === 'function') toggleMenuPanel('list')"></button>
+                    <button class="nav-btn-action" id="navBtnAction" onclick="if(typeof toggleMenuPanel === 'function') toggleMenuPanel('action')">+</button>
+                    <button class="btn-logout" id="btnLogout" onclick="logoutSistem()"></button>
                 </div>
-            </div> 
+            </div>
+
 
             <div class="roll-down-panel" id="universalDropdown">
                 <div class="roll-down-content" id="universalDropdownContent"></div>
