@@ -403,22 +403,29 @@
             const SUPABASE_KEY = 'sb_publishable_ELkRTe17wW5hk7kR6mw3SA_jmq4L8fZ';
             if (window.supabase) {
                 supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            }
+            }function
         } catch (e) {
             console.error("Koneksi Supabase B diblokir browser:", e);
         }
 
         // --- 3. FIX LOGIKA NAVIGASI TRANSISI PREMIUM ---
-        function navigasiAman(targetViewId) {
-            const panels = document.querySelectorAll('.view-panel');
-            panels.forEach(p => {
-                p.classList.remove('active');
-            });
-            const target = document.getElementById(targetViewId);
-            if (target) {
-                target.classList.add('active');
-            }
-        }
+         function navigasiAman(targetViewId) {
+    alert("navigasi dipanggil: " + targetViewId);
+
+    const panels = document.querySelectorAll('.view-panel');
+    panels.forEach(p => {
+        p.classList.remove('active');
+    });
+
+    const target = document.getElementById(targetViewId);
+
+    if (target) {
+        alert("target ditemukan");
+        target.classList.add('active');
+    } else {
+        alert("target TIDAK ditemukan");
+    }
+         }
 
         // --- 4. LOGIKA PERMAINAN & LOBBY ENGINE ---
         const lang = localStorage.getItem('sush_lang') || 'ID';
