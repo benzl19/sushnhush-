@@ -69,7 +69,6 @@
             opacity: 0;
         }
 
-        /* Tipografi & Tombol Utama */
         h1, h2, h3 { margin: 0; font-weight: 600; text-align: center; }
         .title-neon {
             color: #fff;
@@ -130,7 +129,6 @@
             margin-bottom: 0;
         }
 
-        /* Header Navigasi */
         .top-nav {
             display: flex;
             justify-content: space-between;
@@ -138,7 +136,6 @@
             margin-bottom: 30px;
         }
 
-        /* Leaderboard & Rules */
         .panel-box {
             background: rgba(31, 40, 51, 0.5);
             border: 1px solid var(--dark-gray);
@@ -175,34 +172,14 @@
             box-shadow: 0 0 10px rgba(69, 243, 255, 0.3);
         }
 
-        /* Arena Pertandingan */
-        .versus-box {
-            text-align: center;
-            margin-bottom: 20px;
-        }
+        .versus-box { text-align: center; margin-bottom: 20px; }
         .player-name { font-size: 20px; color: #fff; }
         .vs-text { color: var(--neon-red); font-weight: bold; margin: 10px 0; }
         
-        .dots-container {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        .dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: var(--dark-gray);
-        }
-        .dot-win {
-            background: var(--neon-green);
-            box-shadow: 0 0 8px var(--neon-green);
-        }
-        .dot-lose {
-            background: var(--neon-red);
-            box-shadow: 0 0 8px var(--neon-red);
-        }
+        .dots-container { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--dark-gray); }
+        .dot-win { background: var(--neon-green); box-shadow: 0 0 8px var(--neon-green); }
+        .dot-lose { background: var(--neon-red); box-shadow: 0 0 8px var(--neon-red); }
 
         .monster-name {
             text-align: center;
@@ -268,7 +245,6 @@
             margin: 20px 0;
         }
 
-        /* Overlay Hasil Akhir */
         .result-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -294,7 +270,7 @@
         <div id="view-main" class="view-panel active">
             <div class="top-nav">
                 <div id="langIndicator" style="color:#555; font-size:12px;">ID</div>
-                <button class="btn-small" onclick="window.location.href='beranda.html'" id="btnBackShh1">Kembali ke SushnHush</button>
+                <button type="button" class="btn-small" onclick="window.location.href='beranda.html'" id="btnBackShh1">Kembali ke SushnHush</button>
             </div>
             <h1 class="title-neon">RETRIBUTION<br>CONTEST</h1>
             
@@ -314,29 +290,29 @@
                 5. Menekan terlalu cepat (EARLY) bisa berakibat fatal.
             </div>
 
-            <button onclick="navigasi('view-lobby')">Siap, Main</button>
+            <button type="button" onclick="navigasiAman('view-lobby')">Siap, Main</button>
         </div>
 
         <div id="view-lobby" class="view-panel">
             <div class="top-nav">
-                <button class="btn-small" onclick="navigasi('view-main')">← Back</button>
+                <button type="button" class="btn-small" onclick="navigasiAman('view-main')">← Back</button>
                 <div style="font-weight:bold;">LOBBY</div>
                 <div style="width: 60px;"></div>
             </div>
 
             <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
-                <button onclick="buatRoom()">Buat Room Baru</button>
+                <button type="button" onclick="buatRoom()">Buat Room Baru</button>
                 <div style="text-align: center; margin: 20px 0; color: #555;">- ATAU -</div>
                 <input type="text" id="inputRoomId" placeholder="Masukkan ID Room" maxlength="10" autocomplete="off">
-                <button class="btn-red" onclick="joinRoom()">Join Room</button>
+                <button type="button" class="btn-red" onclick="joinRoom()">Join Room</button>
             </div>
         </div>
 
         <div id="view-room" class="view-panel">
             <div class="top-nav">
-                <button class="btn-small" id="btnLeaveRoom" onclick="tinggalkanRoom()">← Keluar</button>
+                <button type="button" class="btn-small" id="btnLeaveRoom" onclick="tinggalkanRoom()">← Keluar</button>
                 <div style="font-weight:bold; color:var(--neon-cyan);" id="displayRoomId">SH-0000</div>
-                <button class="btn-small" onclick="salinRoomId()">Salin ID</button>
+                <button type="button" class="btn-small" onclick="salinRoomId()">Salin ID</button>
             </div>
 
             <div class="panel-box" style="display: flex; flex-direction: column; justify-content: center;">
@@ -348,7 +324,7 @@
                 <div style="text-align:center; margin-top:20px; font-weight:bold;" id="roomStatusText">Menunggu pemain bergabung...</div>
             </div>
 
-            <button id="btnReady" disabled onclick="setReady()">READY</button>
+            <button type="button" id="btnReady" disabled onclick="setReady()">READY</button>
         </div>
 
         <div id="view-arena" class="view-panel">
@@ -385,63 +361,20 @@
                 Batas Retri: <span id="retriLimitText">0</span>
             </div>
 
-            <button class="btn-retri btn-red" id="btnActionRetri" disabled onclick="eksekusiRetri()">RETRI</button>
+            <button type="button" class="btn-retri btn-red" id="btnActionRetri" disabled onclick="eksekusiRetri()">RETRI</button>
         </div>
 
         <div class="result-overlay" id="resultOverlay">
             <h1 class="title-neon" id="resultTitle">GAME OVER</h1>
             <div style="font-size:24px; margin-bottom:30px;" id="resultWinnerText">Pemenang: -</div>
-            <button onclick="kembaliKeLobby()" style="width:80%; max-width:300px;">Kembali ke Lobby</button>
-            <button onclick="window.location.href='beranda.html'" class="btn-red" style="width:80%; max-width:300px;">Kembali ke SushnHush</button>
+            <button type="button" onclick="kembaliKeLobby()" style="width:80%; max-width:300px;">Kembali ke Lobby</button>
+            <button type="button" onclick="window.location.href='beranda.html'" class="btn-red" style="width:80%; max-width:300px;">Kembali ke SushnHush</button>
         </div>
 
     </div>
-    <script>
-        // --- 1. INISIALISASI & KREDENSIAL SUPABASE (SERVER B) ---
-        const SUPABASE_URL = 'https://znbyjoapajjonerfannn.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_ELkRTe17wW5hk7kR6mw3SA_jmq4L8fZ';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        // --- 2. STATE APLIKASI ---
-        let myUsername = localStorage.getItem('sush_curAlias') || 'UnknownNinja';
-        let currentRoomId = null;
-        let myRole = null; // 'p1' atau 'p2'
-        let roomChannel = null;
-        let p1Name = '';
-        let p2Name = '';
-        let currentRound = 1;
-        let p1Wins = 0;
-        let p2Wins = 0;
-        let bothReady = { p1: false, p2: false };
-
-        // Variabel Game Engine
-        let gameAnimFrame;
-        let isPlaying = false;
-        let maxHp = 0;
-        let currentHp = 0;
-        let retriLimit = 0;
-        let animationStartTime = 0;
-        const animationDuration = 2500; // HP habis dalam 2.5 detik
-
-        // Aturan Ronde
-        const roundConfigs = {
-            1: { hp: 15000, limit: 1700 },
-            2: { hp: 18000, limit: 1700 },
-            3: { hp: 20000, limit: 2200 },
-            4: { hp: 22000, limit: 3000 },
-            5: { hp: 30000, limit: 3000 }
-        };
-
-        // Bahasa Sederhana
-        const lang = localStorage.getItem('sush_lang') || 'ID';
-        if(lang === 'EN') {
-            document.getElementById('langIndicator').innerText = 'EN';
-            document.getElementById('btnBackShh1').innerText = 'Back to SushnHush';
-            // Bisa diperluas translasinya, fokus ke teknis utama
-        }
-
-        // --- 3. NAVIGASI VIEW ALA IOS ---
-        function navigasi(targetViewId) {
+        <script>
+        // --- NAVIGASI ANTI-GAGAL (Harus paling atas) ---
+        function navigasiAman(targetViewId) {
             const views = document.querySelectorAll('.view-panel');
             views.forEach(v => {
                 if (v.classList.contains('active')) {
@@ -451,24 +384,68 @@
                     v.classList.remove('slide-left');
                 }
             });
-            document.getElementById(targetViewId).classList.add('active');
+            const target = document.getElementById(targetViewId);
+            if (target) target.classList.add('active');
         }
 
-        // --- 4. LOGIKA LOBBY & DATABASE ---
+        // --- INISIALISASI SUPABASE DENGAN ERROR HANDLING ---
+        let supabase = null;
+        try {
+            const SUPABASE_URL = 'https://znbyjoapajjonerfannn.supabase.co';
+            const SUPABASE_KEY = 'sb_publishable_ELkRTe17wW5hk7kR6mw3SA_jmq4L8fZ';
+            if (window.supabase) {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            }
+        } catch (e) {
+            console.error("Gagal terhubung ke Database B:", e);
+        }
+
+        // --- STATE APLIKASI ---
+        let myUsername = localStorage.getItem('sush_curAlias') || 'UnknownNinja';
+        let currentRoomId = null;
+        let myRole = null; 
+        let roomChannel = null;
+        let p1Name = '';
+        let p2Name = '';
+        let currentRound = 1;
+        let p1Wins = 0;
+        let p2Wins = 0;
+        let bothReady = { p1: false, p2: false };
+
+        let gameAnimFrame;
+        let isPlaying = false;
+        let maxHp = 0;
+        let currentHp = 0;
+        let retriLimit = 0;
+        let animationStartTime = 0;
+        const animationDuration = 2500; 
+
+        const roundConfigs = {
+            1: { hp: 15000, limit: 1700 },
+            2: { hp: 18000, limit: 1700 },
+            3: { hp: 20000, limit: 2200 },
+            4: { hp: 22000, limit: 3000 },
+            5: { hp: 30000, limit: 3000 }
+        };
+
+        const lang = localStorage.getItem('sush_lang') || 'ID';
+        if(lang === 'EN') {
+            document.getElementById('langIndicator').innerText = 'EN';
+            document.getElementById('btnBackShh1').innerText = 'Back to SushnHush';
+        }
+
         function generateRoomId() {
             return 'SH-' + Math.floor(1000 + Math.random() * 9000);
         }
 
         async function buatRoom() {
+            if (!supabase) { alert('Sistem belum terhubung ke Server!'); return; }
             const newId = generateRoomId();
             const { error } = await supabase.from('retri_rooms').insert([
                 { id: newId, p1_username: myUsername, status: 'waiting' }
             ]);
             
-            if (error) {
-                alert('Gagal membuat room: ' + error.message);
-                return;
-            }
+            if (error) { alert('Gagal membuat room: ' + error.message); return; }
 
             currentRoomId = newId;
             myRole = 'p1';
@@ -476,34 +453,24 @@
             p2Name = '';
             
             updateRoomUI();
-            navigasi('view-room');
+            navigasiAman('view-room');
             subscribeKeRoom(newId);
         }
 
         async function joinRoom() {
+            if (!supabase) { alert('Sistem belum terhubung ke Server!'); return; }
             const inputId = document.getElementById('inputRoomId').value.trim().toUpperCase();
             if (!inputId) return;
 
-            // Cek room eksis dan kosong
             const { data, error: fetchErr } = await supabase.from('retri_rooms').select('*').eq('id', inputId).single();
-            if (fetchErr || !data) {
-                alert('Room tidak ditemukan!');
-                return;
-            }
-            if (data.p2_username) {
-                alert('Room sudah penuh!');
-                return;
-            }
+            if (fetchErr || !data) { alert('Room tidak ditemukan!'); return; }
+            if (data.p2_username) { alert('Room sudah penuh!'); return; }
 
-            // Update P2
             const { error: updateErr } = await supabase.from('retri_rooms')
                 .update({ p2_username: myUsername, status: 'full' })
                 .eq('id', inputId);
 
-            if (updateErr) {
-                alert('Gagal bergabung.');
-                return;
-            }
+            if (updateErr) { alert('Gagal bergabung.'); return; }
 
             currentRoomId = inputId;
             myRole = 'p2';
@@ -511,7 +478,7 @@
             p2Name = myUsername;
 
             updateRoomUI();
-            navigasi('view-room');
+            navigasiAman('view-room');
             subscribeKeRoom(inputId);
         }
 
@@ -525,21 +492,15 @@
             document.getElementById('p1NameRoom').innerText = p1Name;
             document.getElementById('p2NameRoom').innerText = p2Name ? p2Name : 'Menunggu Lawan...';
             document.getElementById('btnReady').disabled = !p2Name;
-            
-            if(p2Name) {
-                document.getElementById('roomStatusText').innerText = 'Lawan ditemukan! Tekan READY.';
-            }
+            if(p2Name) document.getElementById('roomStatusText').innerText = 'Lawan ditemukan! Tekan READY.';
         }
 
-        // --- 5. REALTIME SYNC (POSTGRES & BROADCAST) ---
         function subscribeKeRoom(roomId) {
             if (roomChannel) supabase.removeChannel(roomChannel);
-
             roomChannel = supabase.channel('room_' + roomId, {
                 config: { broadcast: { self: true } }
             });
 
-            // Listen Broadcast untuk Ready State & Animasi Sync
             roomChannel.on('broadcast', { event: 'ready_state' }, (payload) => {
                 if (payload.payload.role === 'p1') bothReady.p1 = true;
                 if (payload.payload.role === 'p2') bothReady.p2 = true;
@@ -552,17 +513,12 @@
                 }
             });
 
-            // Listen Perubahan Database (Skor/Round)
             roomChannel.on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'retri_rooms', filter: 'id=eq.'+roomId }, (payload) => {
                 const newData = payload.new;
-                
-                // Jika P2 masuk
                 if (newData.p2_username && !p2Name) {
                     p2Name = newData.p2_username;
                     updateRoomUI();
                 }
-
-                // Jika skor masuk untuk mengevaluasi ronde
                 if (newData.p1_scores.length === currentRound && newData.p2_scores.length === currentRound && isPlaying) {
                     evaluasiPemenangRonde(newData.p1_scores[currentRound-1], newData.p2_scores[currentRound-1]);
                 }
@@ -572,21 +528,14 @@
         function setReady() {
             document.getElementById('btnReady').disabled = true;
             document.getElementById('btnReady').innerText = 'WAITING...';
-            
-            roomChannel.send({
-                type: 'broadcast',
-                event: 'ready_state',
-                payload: { role: myRole }
-            });
+            roomChannel.send({ type: 'broadcast', event: 'ready_state', payload: { role: myRole } });
         }
 
-        // --- 6. LOGIKA PERMAINAN (CLIENT-ENGINE) ---
         function mulaiSiklusRonde() {
             bothReady = { p1: false, p2: false };
             isPlaying = true;
-            navigasi('view-arena');
+            navigasiAman('view-arena');
             
-            // Setup UI Arena
             document.getElementById('arenaRoomId').innerText = currentRoomId;
             document.getElementById('arenaRoundText').innerText = 'Round ' + currentRound;
             document.getElementById('arenaP1Name').innerText = p1Name;
@@ -594,9 +543,7 @@
             document.getElementById('monsterName').innerText = currentRound <= 3 ? 'TURTLE' : 'LORD EVOLVED';
             
             const conf = roundConfigs[currentRound];
-            maxHp = conf.hp;
-            retriLimit = conf.limit;
-            currentHp = maxHp;
+            maxHp = conf.hp; retriLimit = conf.limit; currentHp = maxHp;
             
             document.getElementById('hpMaxText').innerText = maxHp;
             document.getElementById('hpText').innerText = maxHp;
@@ -638,7 +585,6 @@
 
         function updateDarah(timestamp) {
             if (!isPlaying) return;
-            
             const elapsed = timestamp - animationStartTime;
             const progress = Math.min(elapsed / animationDuration, 1);
             currentHp = Math.floor(maxHp * (1 - progress));
@@ -652,10 +598,7 @@
                 currentHp = 0;
                 document.getElementById('hpText').innerText = '0';
                 document.getElementById('hpBarFill').style.width = '0%';
-                if (document.getElementById('btnActionRetri').disabled === false) {
-                    // Jika tidak ditekan sama sekali
-                    eksekusiRetri(true);
-                }
+                if (document.getElementById('btnActionRetri').disabled === false) eksekusiRetri(true);
             }
         }
 
@@ -668,12 +611,10 @@
             if(missed) statusAction = 'MISSED';
 
             document.getElementById('btnActionRetri').innerText = statusAction;
-
             const scoreData = { round: currentRound, hp: finalHp, status: statusAction, time: Date.now() };
-
-            // Kirim ke RPC
             const rpcName = myRole === 'p1' ? 'append_p1_score' : 'append_p2_score';
-            await supabase.rpc(rpcName, { p_room_id: currentRoomId, p_score_data: scoreData });
+            
+            if (supabase) await supabase.rpc(rpcName, { p_room_id: currentRoomId, p_score_data: scoreData });
         }
 
         function evaluasiPemenangRonde(p1Score, p2Score) {
@@ -687,29 +628,22 @@
             } else if (p2Score.status === 'SECURED' && p1Score.status !== 'SECURED') {
                 roundWinner = 'p2';
             } else if (p1Score.status === 'EARLY' && p2Score.status === 'EARLY') {
-                // Yang mendekati batas dari atas
                 const diff1 = p1Score.hp - retriLimit;
                 const diff2 = p2Score.hp - retriLimit;
                 roundWinner = (diff1 < diff2) ? 'p1' : 'p2';
             } else {
-                // Fallback (misal missed semua)
                 roundWinner = (p1Score.hp > p2Score.hp) ? 'p1' : 'p2';
             }
 
-            if (roundWinner === 'p1') p1Wins++;
-            else p2Wins++;
-
+            if (roundWinner === 'p1') p1Wins++; else p2Wins++;
             updateTampilanDots();
 
             setTimeout(() => {
-                if (p1Wins === 3 || p2Wins === 3) {
-                    selesaikanGame(p1Wins === 3 ? 'p1' : 'p2');
-                } else {
+                if (p1Wins === 3 || p2Wins === 3) selesaikanGame(p1Wins === 3 ? 'p1' : 'p2');
+                else {
                     currentRound++;
-                    if (myRole === 'p1') {
-                        supabase.from('retri_rooms').update({ current_round: currentRound }).eq('id', currentRoomId).then();
-                    }
-                    navigasi('view-room');
+                    if (myRole === 'p1' && supabase) supabase.from('retri_rooms').update({ current_round: currentRound }).eq('id', currentRoomId).then();
+                    navigasiAman('view-room');
                     document.getElementById('roomStatusText').innerText = 'Round Selesai. Bersiap untuk Round ' + currentRound;
                     document.getElementById('btnReady').innerText = 'READY';
                     document.getElementById('btnReady').disabled = false;
@@ -720,12 +654,9 @@
         function updateTampilanDots() {
             const updateDots = (containerId, wins) => {
                 const dots = document.getElementById(containerId).children;
-                for(let i=0; i<3; i++) {
-                    dots[i].className = 'dot ' + (i < wins ? 'dot-win' : 'dot-empty');
-                }
+                for(let i=0; i<3; i++) dots[i].className = 'dot ' + (i < wins ? 'dot-win' : 'dot-empty');
             };
-            updateDots('p1Dots', p1Wins);
-            updateDots('p2Dots', p2Wins);
+            updateDots('p1Dots', p1Wins); updateDots('p2Dots', p2Wins);
         }
 
         async function selesaikanGame(winnerRole) {
@@ -733,55 +664,44 @@
             document.getElementById('resultWinnerText').innerText = 'Pemenang: ' + winnerName;
             document.getElementById('resultOverlay').classList.add('show');
 
-            if (myRole === 'p1') {
+            if (myRole === 'p1' && supabase) {
                 await supabase.from('retri_rooms').update({ status: 'finished', winner_username: winnerName }).eq('id', currentRoomId);
-                
-                // Push Leaderboard
                 try {
                     const { data } = await supabase.from('retri_leaderboard').select('wins').eq('username', winnerName).single();
                     const newWins = data ? data.wins + 1 : 1;
                     await supabase.from('retri_leaderboard').upsert([{ username: winnerName, wins: newWins }]);
-                } catch(e) { console.error('Leaderboard table mungkin belum siap', e); }
+                } catch(e) {}
             }
             if (roomChannel) supabase.removeChannel(roomChannel);
         }
 
         function tinggalkanRoom() {
             if (roomChannel) supabase.removeChannel(roomChannel);
-            currentRoomId = null;
-            navigasi('view-lobby');
+            currentRoomId = null; navigasiAman('view-lobby');
         }
 
         function kembaliKeLobby() {
             document.getElementById('resultOverlay').classList.remove('show');
-            currentRound = 1;
-            p1Wins = 0; p2Wins = 0;
-            updateTampilanDots();
-            tinggalkanRoom();
+            currentRound = 1; p1Wins = 0; p2Wins = 0;
+            updateTampilanDots(); tinggalkanRoom();
         }
 
-        // --- 7. LOAD LEADERBOARD AWAL ---
         async function muatLeaderboard() {
+            if (!supabase) {
+                document.getElementById('leaderboardList').innerHTML = '<div style="text-align:center; color:#555;">Sistem Leaderboard Offline</div>';
+                return;
+            }
             try {
-                const { data, error } = await supabase.from('retri_leaderboard').select('*').order('wins', { ascending: false }).limit(5);
+                const { data } = await supabase.from('retri_leaderboard').select('*').order('wins', { ascending: false }).limit(5);
                 if(data && data.length > 0) {
                     let html = '';
-                    data.forEach((r, i) => {
-                        html += `<div class="leaderboard-item"><span>#${i+1} ${r.username}</span><span>${r.wins} Win</span></div>`;
-                    });
+                    data.forEach((r, i) => { html += `<div class="leaderboard-item"><span>#${i+1} ${r.username}</span><span>${r.wins} Win</span></div>`; });
                     document.getElementById('leaderboardList').innerHTML = html;
-                } else {
-                    document.getElementById('leaderboardList').innerHTML = '<div style="text-align:center; color:#555;">Belum ada juara</div>';
-                }
-            } catch(e) {
-                document.getElementById('leaderboardList').innerHTML = '<div style="text-align:center; color:#555;">Sistem Leaderboard Offline</div>';
-            }
+                } else document.getElementById('leaderboardList').innerHTML = '<div style="text-align:center; color:#555;">Belum ada juara</div>';
+            } catch(e) { document.getElementById('leaderboardList').innerHTML = '<div style="text-align:center; color:#555;">Sistem Leaderboard Offline</div>'; }
         }
 
-        window.onload = () => {
-            muatLeaderboard();
-        };
-
+        window.onload = () => { muatLeaderboard(); };
     </script>
 </body>
 </html>
