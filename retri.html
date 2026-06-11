@@ -38,7 +38,7 @@
             box-shadow: 0 0 20px rgba(69, 243, 255, 0.05);
         }
 
-        /* Transisi Premium ala iOS */
+        /* PERBAIKAN CSS: Menggunakan visibility untuk mencegah blokir sensor klik */
         .view-panel {
             position: absolute;
             top: 0;
@@ -50,17 +50,17 @@
             box-sizing: border-box;
             padding: 20px;
             background-color: var(--bg-color);
-            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             transform: translateX(100%);
             opacity: 0;
-            pointer-events: none;
+            visibility: hidden; /* Matikan panel sepenuhnya jika tidak aktif */
             z-index: 1;
         }
 
         .view-panel.active {
-            transform: translateX(0) !important;
-            opacity: 1 !important;
-            pointer-events: auto !important;
+            transform: translateX(0);
+            opacity: 1;
+            visibility: visible; /* Hidupkan kembali saat aktif */
             z-index: 2;
         }
 
@@ -226,43 +226,24 @@
         .btn-retri {
             height: 100px;
             font-size: 32px;
-            border-radius: 20px;
-            margin-top: auto;
-            margin-bottom: 20px;
+            border
+            <body>
+    <script>
+        function navigasiAman(targetViewId) {
+            const panels = document.querySelectorAll('.view-panel');
+            panels.forEach(p => {
+                p.classList.remove('active');
+            });
+            const target = document.getElementById(targetViewId);
+            if (target) {
+                target.classList.add('active');
+            }
         }
+    </script>
 
-        .countdown-text {
-            text-align: center;
-            font-size: 60px;
-            color: var(--neon-red);
-            font-weight: bold;
-            text-shadow: 0 0 20px var(--neon-red);
-            margin: 20px 0;
-        }
-
-        .result-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(11, 12, 16, 0.95);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s;
-        }
-        .result-overlay.show {
-            opacity: 1;
-            pointer-events: auto;
-        }
-    </style>
-</head>
-<body>
     <div class="container">
 
-        <div id="view-main" class="view-panel active" style="z-index:9999;">
+        <div id="view-main" class="view-panel active">
             <div class="top-nav">
                 <div id="langIndicator" style="color:#555; font-size:12px;">ID</div>
                 <button type="button" class="btn-small" onclick="window.location.href='beranda.html'" id="btnBackShh1">Kembali ke SushnHush</button>
@@ -285,7 +266,7 @@
                 5. Menekan terlalu cepat (EARLY) bisa berakibat fatal.
             </div>
 
-            <button type="button" onclick="alert('TOMBOL BERHASIL DITEKAN'); navigasiAman('view-lobby')">Siap, Main</button>
+            <button type="button" onclick="navigasiAman('view-lobby')">Siap, Main</button>
         </div>
 
         <div id="view-lobby" class="view-panel">
@@ -365,10 +346,10 @@
             <button type="button" onclick="kembaliKeLobby()" style="width:80%; max-width:300px;">Kembali ke Lobby</button>
             <button type="button" onclick="window.location.href='beranda.html'" class="btn-red" style="width:80%; max-width:300px;">Kembali ke SushnHush</button>
         </div>
-       </div> 
-    
-        <script>
-        // --- 1. DEKLARASI VARIABEL UTAMA (WAJIB DI ATAS AGAR TIDAK ERROR CODES) ---
+
+    </div>
+            <script>
+        // --- 1. DEKLARASI VARIABEL UTAMA ---
         let supabase = null;
         let myUsername = localStorage.getItem('sush_curAlias') || 'UnknownNinja';
         let currentRoomId = null;
@@ -403,37 +384,19 @@
             const SUPABASE_KEY = 'sb_publishable_ELkRTe17wW5hk7kR6mw3SA_jmq4L8fZ';
             if (window.supabase) {
                 supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            }function
+            }
         } catch (e) {
             console.error("Koneksi Supabase B diblokir browser:", e);
         }
 
-        // --- 3. FIX LOGIKA NAVIGASI TRANSISI PREMIUM ---
-         function navigasiAman(targetViewId) {
-    alert("navigasi dipanggil: " + targetViewId);
-
-    const panels = document.querySelectorAll('.view-panel');
-    panels.forEach(p => {
-        p.classList.remove('active');
-    });
-
-    const target = document.getElementById(targetViewId);
-
-    if (target) {
-        alert("target ditemukan");
-        target.classList.add('active');
-    } else {
-        alert("target TIDAK ditemukan");
-    }
-         }
-
-        // --- 4. LOGIKA PERMAINAN & LOBBY ENGINE ---
+        // --- 3. PENGATURAN BAHASA LOKAL ---
         const lang = localStorage.getItem('sush_lang') || 'ID';
         if(lang === 'EN') {
             document.getElementById('langIndicator').innerText = 'EN';
             document.getElementById('btnBackShh1').innerText = 'Back to SushnHush';
         }
 
+        // --- 4. LOGIKA PERMAINAN & LOBBY ENGINE ---
         function generateRoomId() {
             return 'SH-' + Math.floor(1000 + Math.random() * 9000);
         }
@@ -709,7 +672,8 @@
             } catch(e) { document.getElementById('leaderboardList').innerHTML = '<div style="text-align:center; color:#555;">Sistem Leaderboard Offline</div>'; }
         }
 
-        window.onload = () => {};
+        window.onload = () => { muatLeaderboard(); };
     </script>
 </body>
 </html>
+            
