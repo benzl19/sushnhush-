@@ -38,7 +38,7 @@
             box-shadow: 0 0 20px rgba(69, 243, 255, 0.05);
         }
 
-        /* Transisi ala iOS */
+        /* Transisi Premium ala iOS */
         .view-panel {
             position: absolute;
             top: 0;
@@ -58,15 +58,10 @@
         }
 
         .view-panel.active {
-            transform: translateX(0);
-            opacity: 1;
-            pointer-events: auto;
+            transform: translateX(0) !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
             z-index: 2;
-        }
-
-        .view-panel.slide-left {
-            transform: translateX(-100%);
-            opacity: 0;
         }
 
         h1, h2, h3 { margin: 0; font-weight: 600; text-align: center; }
@@ -370,37 +365,11 @@
             <button type="button" onclick="kembaliKeLobby()" style="width:80%; max-width:300px;">Kembali ke Lobby</button>
             <button type="button" onclick="window.location.href='beranda.html'" class="btn-red" style="width:80%; max-width:300px;">Kembali ke SushnHush</button>
         </div>
-
-    </div>
+       </div> 
+    
         <script>
-        // --- NAVIGASI ANTI-GAGAL (Harus paling atas) ---
-        function navigasiAman(targetViewId) {
-            const views = document.querySelectorAll('.view-panel');
-            views.forEach(v => {
-                if (v.classList.contains('active')) {
-                    v.classList.remove('active');
-                    v.classList.add('slide-left');
-                } else {
-                    v.classList.remove('slide-left');
-                }
-            });
-            const target = document.getElementById(targetViewId);
-            if (target) target.classList.add('active');
-        }
-
-        // --- INISIALISASI SUPABASE DENGAN ERROR HANDLING ---
+        // --- 1. DEKLARASI VARIABEL UTAMA (WAJIB DI ATAS AGAR TIDAK ERROR CODES) ---
         let supabase = null;
-        try {
-            const SUPABASE_URL = 'https://znbyjoapajjonerfannn.supabase.co';
-            const SUPABASE_KEY = 'sb_publishable_ELkRTe17wW5hk7kR6mw3SA_jmq4L8fZ';
-            if (window.supabase) {
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            }
-        } catch (e) {
-            console.error("Gagal terhubung ke Database B:", e);
-        }
-
-        // --- STATE APLIKASI ---
         let myUsername = localStorage.getItem('sush_curAlias') || 'UnknownNinja';
         let currentRoomId = null;
         let myRole = null; 
@@ -428,6 +397,30 @@
             5: { hp: 30000, limit: 3000 }
         };
 
+        // --- 2. KONEKSI SUPABASE AMAN ---
+        try {
+            const SUPABASE_URL = 'https://znbyjoapajjonerfannn.supabase.co';
+            const SUPABASE_KEY = 'sb_publishable_ELkRTe17wW5hk7kR6mw3SA_jmq4L8fZ';
+            if (window.supabase) {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            }
+        } catch (e) {
+            console.error("Koneksi Supabase B diblokir browser:", e);
+        }
+
+        // --- 3. FIX LOGIKA NAVIGASI TRANSISI PREMIUM ---
+        function navigasiAman(targetViewId) {
+            const panels = document.querySelectorAll('.view-panel');
+            panels.forEach(p => {
+                p.classList.remove('active');
+            });
+            const target = document.getElementById(targetViewId);
+            if (target) {
+                target.classList.add('active');
+            }
+        }
+
+        // --- 4. LOGIKA PERMAINAN & LOBBY ENGINE ---
         const lang = localStorage.getItem('sush_lang') || 'ID';
         if(lang === 'EN') {
             document.getElementById('langIndicator').innerText = 'EN';
@@ -439,7 +432,7 @@
         }
 
         async function buatRoom() {
-            if (!supabase) { alert('Sistem belum terhubung ke Server!'); return; }
+            if (!supabase) { alert('Database tidak siap! Periksa koneksi internet Anda.'); return; }
             const newId = generateRoomId();
             const { error } = await supabase.from('retri_rooms').insert([
                 { id: newId, p1_username: myUsername, status: 'waiting' }
@@ -458,7 +451,7 @@
         }
 
         async function joinRoom() {
-            if (!supabase) { alert('Sistem belum terhubung ke Server!'); return; }
+            if (!supabase) { alert('Database tidak siap!'); return; }
             const inputId = document.getElementById('inputRoomId').value.trim().toUpperCase();
             if (!inputId) return;
 
@@ -496,7 +489,9 @@
         }
 
         function subscribeKeRoom(roomId) {
+            if (!supabase) return;
             if (roomChannel) supabase.removeChannel(roomChannel);
+            
             roomChannel = supabase.channel('room_' + roomId, {
                 config: { broadcast: { self: true } }
             });
@@ -528,7 +523,7 @@
         function setReady() {
             document.getElementById('btnReady').disabled = true;
             document.getElementById('btnReady').innerText = 'WAITING...';
-            roomChannel.send({ type: 'broadcast', event: 'ready_state', payload: { role: myRole } });
+            if (roomChannel) roomChannel.send({ type: 'broadcast', event: 'ready_state', payload: { role: myRole } });
         }
 
         function mulaiSiklusRonde() {
@@ -598,7 +593,9 @@
                 currentHp = 0;
                 document.getElementById('hpText').innerText = '0';
                 document.getElementById('hpBarFill').style.width = '0%';
-                if (document.getElementById('btnActionRetri').disabled === false) eksekusiRetri(true);
+                if (document.getElementById('btnActionRetri').disabled === false) {
+                    eksekusiRetri(true);
+                }
             }
         }
 
@@ -653,8 +650,12 @@
 
         function updateTampilanDots() {
             const updateDots = (containerId, wins) => {
-                const dots = document.getElementById(containerId).children;
-                for(let i=0; i<3; i++) dots[i].className = 'dot ' + (i < wins ? 'dot-win' : 'dot-empty');
+                const container = document.getElementById(containerId);
+                if (!container) return;
+                const dots = container.children;
+                for(let i=0; i<3; i++) {
+                    if(dots[i]) dots[i].className = 'dot ' + (i < wins ? 'dot-win' : 'dot-empty');
+                }
             };
             updateDots('p1Dots', p1Wins); updateDots('p2Dots', p2Wins);
         }
@@ -672,11 +673,11 @@
                     await supabase.from('retri_leaderboard').upsert([{ username: winnerName, wins: newWins }]);
                 } catch(e) {}
             }
-            if (roomChannel) supabase.removeChannel(roomChannel);
+            if (roomChannel && supabase) supabase.removeChannel(roomChannel);
         }
 
         function tinggalkanRoom() {
-            if (roomChannel) supabase.removeChannel(roomChannel);
+            if (roomChannel && supabase) supabase.removeChannel(roomChannel);
             currentRoomId = null; navigasiAman('view-lobby');
         }
 
