@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Retribution Contest - Fase 3</title>
+    <title>Retribution Contest - Final</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* TEMA CYBERPUNK NEON */
         :root {
             --bg-color: #0b0c10; --text-color: #c5c6c7;
             --neon-cyan: #45f3ff; --neon-red: #ff4a4a;
@@ -26,7 +25,7 @@
             position: relative; background-color: var(--bg-color); overflow: hidden;
         }
 
-        /* ARSITEKTUR TRANSISI iOS */
+        /* TRANSISI iOS ANTI-MACET */
         .view-panel {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             display: flex; flex-direction: column; padding: 20px; box-sizing: border-box;
@@ -38,7 +37,6 @@
         .view-panel.active { transform: translateX(0); opacity: 1; pointer-events: auto; z-index: 2; }
         .view-panel.slide-left { transform: translateX(-100%); opacity: 0; pointer-events: none; z-index: 1; }
 
-        /* KOSMETIK ELEMEN */
         h1 { margin: 0; text-align: center; color: #fff; text-shadow: 0 0 10px var(--neon-cyan); margin-bottom: 20px; font-weight: 600; }
         .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
         .panel-box { background: rgba(31, 40, 51, 0.5); border: 1px solid var(--dark-gray); border-radius: 10px; padding: 15px; margin-bottom: 20px; }
@@ -63,9 +61,25 @@
         }
         input[type="text"]:focus { outline: none; border-color: var(--neon-cyan); box-shadow: 0 0 10px rgba(69, 243, 255, 0.3); }
 
+        /* UI MEKANIK GAME */
         .versus-box { text-align: center; margin-bottom: 20px; }
         .player-name { font-size: 20px; color: #fff; }
         .vs-text { color: var(--neon-red); font-weight: bold; margin: 10px 0; }
+        .dots-container { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--dark-gray); transition: all 0.3s;}
+        .dot-win { background: var(--neon-green); box-shadow: 0 0 8px var(--neon-green); }
+        
+        .monster-name { text-align: center; font-size: 24px; color: var(--neon-cyan); margin-top: 20px; letter-spacing: 2px; text-transform: uppercase; }
+        .monster-status { text-align: center; font-size: 18px; color: var(--neon-red); margin: 10px 0; font-weight: bold; display: none;}
+        .health-bar-container { width: 100%; height: 40px; background: var(--dark-gray); border: 2px solid #555; border-radius: 20px; margin: 20px 0; position: relative; overflow: hidden; }
+        .health-bar-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #ff4a4a, #ff9e9e); }
+        .health-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; font-weight: bold; font-size: 18px; text-shadow: 1px 1px 2px #000; }
+        .limit-marker { position: absolute; top: 0; height: 100%; width: 2px; background: var(--neon-green); box-shadow: 0 0 10px var(--neon-green); z-index: 2; }
+        
+        .btn-retri { height: 100px; font-size: 32px; border-radius: 20px; margin-top: auto; margin-bottom: 20px; }
+        .countdown-text { text-align: center; font-size: 60px; color: var(--neon-cyan); font-weight: bold; margin: 20px 0; text-shadow: 0 0 20px var(--neon-cyan); display: none; }
+
+        #resultOverlay { display: none; position: absolute; top: 0; left: 0; width: 100%; min-height: 100vh; background: rgba(11, 12, 16, 0.95); flex-direction: column; justify-content: center; align-items: center; z-index: 10; padding: 20px; box-sizing: border-box;}
     </style>
 </head>
 <body>
@@ -73,7 +87,7 @@
 
         <div id="view-main" class="view-panel active">
             <div class="top-nav">
-                <div style="color:#555; font-size:12px;">FASE 3</div>
+                <div style="color:#555; font-size:12px;">FASE 4 FINAL</div>
                 <button type="button" class="btn-small" onclick="window.location.href='beranda.html'">Kembali</button>
             </div>
             
@@ -81,15 +95,12 @@
             
             <div class="panel-box">
                 <h3 style="margin-bottom:10px; color:var(--neon-cyan); text-align:center;">LEADERBOARD</h3>
-                <div id="leaderboardList">
-                    <div style="text-align:center; color:#555;">Memuat data...</div>
-                </div>
+                <div id="leaderboardList"><div style="text-align:center; color:#555;">Memuat data...</div></div>
             </div>
 
             <div style="text-align:center; margin-bottom: 15px; font-size: 14px;">
                 Bermain sebagai: <span id="displayUsername" style="color: var(--neon-green); font-weight:bold;">...</span>
             </div>
-
             <button type="button" onclick="transisiLayar('view-main', 'view-lobby', 'maju')">Siap, Main</button>
         </div>
 
@@ -128,14 +139,59 @@
                 </div>
             </div>
 
-            <button type="button" id="btnReady" disabled>READY (Tahap Selanjutnya)</button>
+            <button type="button" id="btnReady" disabled onclick="setReady()">READY</button>
+        </div>
+
+
+        <div id="view-arena" class="view-panel">
+            <div class="top-nav" style="margin-bottom: 10px;">
+                <div style="font-size:12px; color:#555;" id="arenaRoundText">Round 1</div>
+                <div style="font-weight:bold; color:var(--neon-cyan);" id="arenaRoomId">SH-0000</div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; padding:0 20px;">
+                <div style="text-align:center;">
+                    <div id="arenaP1Name" style="font-size:14px; font-weight:bold;">P1</div>
+                    <div class="dots-container" id="p1Dots">
+                        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+                    </div>
+                </div>
+                <div style="text-align:center;">
+                    <div id="arenaP2Name" style="font-size:14px; font-weight:bold;">P2</div>
+                    <div class="dots-container" id="p2Dots">
+                        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="monster-name" id="monsterName">TURTLE</div>
+            <div class="countdown-text" id="countdownDisplay">3</div>
+            <div class="monster-status" id="monsterStatusText">MUNCUL!</div>
+
+            <div class="health-bar-container">
+                <div class="health-bar-fill" id="hpBarFill"></div>
+                <div class="limit-marker" id="hpLimitMarker" style="left: 10%;"></div>
+                <div class="health-text"><span id="hpText">0</span> / <span id="hpMaxText">0</span></div>
+            </div>
+            
+            <div style="text-align:center; font-size:14px; color:var(--neon-green); margin-bottom:20px;">
+                Batas Retri: <span id="retriLimitText">0</span>
+            </div>
+
+            <button type="button" class="btn-retri btn-red" id="btnActionRetri" disabled onclick="eksekusiRetri()">RETRI</button>
+        </div>
+
+
+        <div id="resultOverlay">
+            <h1 class="title-neon">MATCH SELESAI</h1>
+            <div style="font-size:24px; margin-bottom:30px; color:#fff;" id="resultWinnerText">Pemenang: -</div>
+            <button type="button" onclick="kembaliKeLobby()">Kembali ke Lobby</button>
+            <button type="button" onclick="window.location.href='beranda.html'" class="btn-red">Kembali ke SushnHush</button>
         </div>
 
     </div>
         <script>
-        // ========================================================
-        // 1. FUNGSI NAVIGASI CERDAS (Maju & Mundur)
-        // ========================================================
+        // 1. NAVIGASI AMAN
         function transisiLayar(idAsal, idTujuan, arah = 'maju') {
             const layarAsal = document.getElementById(idAsal);
             const layarTujuan = document.getElementById(idTujuan);
@@ -153,17 +209,32 @@
             }
         }
 
-        // ========================================================
-        // 2. SETUP IDENTITAS & CLOUD B
-        // ========================================================
+        // 2. STATE & KONFIGURASI GAME
         let supabaseB = null; 
         let roomChannel = null;
         let currentRoomId = null;
-        let p1Name = '';
-        let p2Name = '';
+        let p1Name = '', p2Name = '';
         let myRole = null;
+        
+        let currentRound = 1;
+        let p1Wins = 0, p2Wins = 0;
+        let bothReady = { p1: false, p2: false };
 
-        const myUsername = localStorage.getItem('sush_curAlias') || 'Guest_' + Math.floor(Math.random() * 1000);
+        let gameAnimFrame;
+        let isPlaying = false;
+        let maxHp = 0, currentHp = 0, retriLimit = 0;
+
+        // Cetak Biru Logika Anda
+        const roundConfigs = {
+            1: { type: 'Turtle', hp: 15000, limit: 1700 },
+            2: { type: 'Turtle', hp: 18000, limit: 2300 },
+            3: { type: 'Turtle', hp: 20000, limit: 2800 },
+            4: { type: 'Lord', hp: 22000, limit: 3000 },
+            5: { type: 'Lord Evolve', hp: 30000, limit: 3000 }
+        };
+        const drainValues = [150, 185, 225, 250, 285, 300];
+
+        const myUsername = localStorage.getItem('sush_curAlias') || 'Ninja_' + Math.floor(Math.random() * 1000);
 
         try {
             if (window.supabase) {
@@ -172,100 +243,75 @@
                 supabaseB = window.supabase.createClient(URL_B, KEY_B);
             }
         } catch (e) {
-            console.error("Gagal menghubungkan Supabase B:", e);
+            console.error("Supabase Error:", e);
         }
 
-        // ========================================================
-        // 3. FUNGSI PEMBUATAN & GABUNG ROOM
-        // ========================================================
-        function generateRoomId() {
-            return 'SH-' + Math.floor(1000 + Math.random() * 9000);
-        }
+        // 3. FUNGSI ROOM (Buat & Masuk)
+        function generateRoomId() { return 'SH-' + Math.floor(1000 + Math.random() * 9000); }
 
         function updateRoomUI() {
             document.getElementById('displayRoomId').innerText = currentRoomId;
             document.getElementById('p1NameRoom').innerText = p1Name;
             
+            const btnReady = document.getElementById('btnReady');
             if (p2Name) {
                 document.getElementById('p2NameRoom').innerText = p2Name;
                 document.getElementById('p2NameRoom').style.color = '#fff';
-                document.getElementById('roomStatusText').innerText = 'Lawan telah masuk!';
+                document.getElementById('roomStatusText').innerText = 'Lawan ditemukan! Tekan READY.';
+                btnReady.disabled = false;
             } else {
                 document.getElementById('p2NameRoom').innerText = 'Menunggu Lawan...';
                 document.getElementById('p2NameRoom').style.color = '#555';
                 document.getElementById('roomStatusText').innerText = 'Menunggu pemain bergabung...';
+                btnReady.disabled = true;
             }
         }
 
         async function buatRoom() {
-            if (!supabaseB) { alert('Sistem Database Terputus!'); return; }
-            
-            const btn = event.target;
-            btn.innerText = 'Membuat...'; btn.disabled = true;
+            if (!supabaseB) return alert('Koneksi Database Terputus!');
+            const btn = event.target; btn.innerText = 'Membuat...'; btn.disabled = true;
 
             const newId = generateRoomId();
             try {
-                // Tembak ke Supabase B
                 const { error } = await supabaseB.from('retri_rooms').insert([
                     { id: newId, p1_username: myUsername, status: 'waiting' }
                 ]);
-                
                 if (error) throw error;
 
-                // Sukses
                 currentRoomId = newId; myRole = 'p1'; p1Name = myUsername; p2Name = '';
-                updateRoomUI();
-                transisiLayar('view-lobby', 'view-room', 'maju');
+                updateRoomUI(); transisiLayar('view-lobby', 'view-room', 'maju');
                 subscribeKeRoom(newId);
-
-            } catch (err) {
-                alert('Gagal membuat room: ' + err.message);
-            } finally {
-                btn.innerText = 'Buat Room Baru'; btn.disabled = false;
-            }
+            } catch (err) { alert('Error: ' + err.message); } 
+            finally { btn.innerText = 'Buat Room Baru'; btn.disabled = false; }
         }
 
         async function joinRoom() {
-            if (!supabaseB) { alert('Sistem Database Terputus!'); return; }
-            
-            const inputElement = document.getElementById('inputRoomId');
-            const inputId = inputElement.value.trim().toUpperCase();
-            if (!inputId) { alert('Masukkan ID Room dulu!'); return; }
+            if (!supabaseB) return alert('Koneksi Database Terputus!');
+            const inputId = document.getElementById('inputRoomId').value.trim().toUpperCase();
+            if (!inputId) return alert('Masukkan ID Room!');
 
-            const btn = event.target;
-            btn.innerText = 'Mencari...'; btn.disabled = true;
+            const btn = event.target; btn.innerText = 'Mencari...'; btn.disabled = true;
 
             try {
-                // Cari data room
                 const { data, error: fetchErr } = await supabaseB.from('retri_rooms').select('*').eq('id', inputId).single();
                 if (fetchErr || !data) throw new Error('Room tidak ditemukan!');
-                if (data.p2_username) throw new Error('Room sudah penuh!');
+                if (data.p2_username) throw new Error('Room penuh!');
 
-                // Update room dengan nama kita
                 const { error: updateErr } = await supabaseB.from('retri_rooms').update({ 
                     p2_username: myUsername, status: 'full' 
                 }).eq('id', inputId);
-                
                 if (updateErr) throw updateErr;
 
-                // Sukses masuk
                 currentRoomId = inputId; myRole = 'p2'; 
                 p1Name = data.p1_username; p2Name = myUsername;
                 
-                updateRoomUI();
-                transisiLayar('view-lobby', 'view-room', 'maju');
+                updateRoomUI(); transisiLayar('view-lobby', 'view-room', 'maju');
                 subscribeKeRoom(inputId);
-
-            } catch (err) {
-                alert(err.message);
-            } finally {
-                btn.innerText = 'Join Room'; btn.disabled = false;
-                inputElement.value = ''; // Bersihkan input
-            }
+            } catch (err) { alert(err.message); } 
+            finally { btn.innerText = 'Join Room'; btn.disabled = false; document.getElementById('inputRoomId').value = ''; }
         }
 
         function salinRoomId() {
-            if (!currentRoomId) return;
             navigator.clipboard.writeText(currentRoomId);
             alert('ID Disalin: ' + currentRoomId);
         }
@@ -273,51 +319,231 @@
         function tinggalkanRoom() {
             if (roomChannel && supabaseB) supabaseB.removeChannel(roomChannel);
             currentRoomId = null; p1Name = ''; p2Name = ''; myRole = null;
+            bothReady = { p1: false, p2: false };
             transisiLayar('view-room', 'view-lobby', 'mundur');
         }
 
-        // ========================================================
-        // 4. SUPABASE REALTIME LISTENER (DETEKSI LAWAN)
-        // ========================================================
+        // 4. SINKRONISASI REALTIME & SKOR
         function subscribeKeRoom(roomId) {
             if (!supabaseB) return;
             if (roomChannel) supabaseB.removeChannel(roomChannel);
             
             roomChannel = supabaseB.channel('room_' + roomId)
-            .on(
-                'postgres_changes', 
-                { event: 'UPDATE', schema: 'public', table: 'retri_rooms', filter: 'id=eq.' + roomId }, 
-                (payload) => {
-                    const newData = payload.new;
-                    // Jika ada p2_username masuk dan kita belum tau
-                    if (newData.p2_username && !p2Name) { 
-                        p2Name = newData.p2_username; 
-                        updateRoomUI(); 
-                    }
+            .on('broadcast', { event: 'ready_state' }, (payload) => {
+                if (payload.payload.role === 'p1') bothReady.p1 = true;
+                if (payload.payload.role === 'p2') bothReady.p2 = true;
+                
+                if (bothReady.p1 && bothReady.p2) {
+                    mulaiSiklusRonde();
+                } else {
+                    document.getElementById('roomStatusText').innerText = (payload.payload.role === myRole) ? 'Menunggu lawan ready...' : 'Lawan sudah siap!';
                 }
-            ).subscribe();
+            })
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'retri_rooms', filter: 'id=eq.' + roomId }, (payload) => {
+                const newData = payload.new;
+                if (newData.p2_username && !p2Name) { p2Name = newData.p2_username; updateRoomUI(); }
+                
+                // Cek Skor Ronde
+                const p1Scores = newData.p1_scores || [];
+                const p2Scores = newData.p2_scores || [];
+                
+                if (p1Scores.length === currentRound && p2Scores.length === currentRound && isPlaying) {
+                    evaluasiPemenangRonde(p1Scores[currentRound-1], p2Scores[currentRound-1]);
+                }
+            }).subscribe();
         }
 
-        // ========================================================
-        // 5. LEADERBOARD (WARISAN FASE 2)
-        // ========================================================
+        function setReady() {
+            document.getElementById('btnReady').disabled = true;
+            document.getElementById('btnReady').innerText = 'WAITING...';
+            if (roomChannel) roomChannel.send({ type: 'broadcast', event: 'ready_state', payload: { role: myRole } });
+        }
+
+        // 5. ENGINE GAMEPLAY (ARENA)
+        function mulaiSiklusRonde() {
+            bothReady = { p1: false, p2: false }; isPlaying = true;
+            transisiLayar('view-room', 'view-arena', 'maju');
+            
+            document.getElementById('arenaRoomId').innerText = currentRoomId;
+            document.getElementById('arenaRoundText').innerText = 'Round ' + currentRound;
+            document.getElementById('arenaP1Name').innerText = p1Name;
+            document.getElementById('arenaP2Name').innerText = p2Name;
+            
+            const conf = roundConfigs[currentRound];
+            document.getElementById('monsterName').innerText = conf.type;
+            
+            maxHp = conf.hp; retriLimit = conf.limit; currentHp = maxHp;
+            
+            document.getElementById('hpMaxText').innerText = maxHp;
+            document.getElementById('hpText').innerText = maxHp;
+            document.getElementById('retriLimitText').innerText = retriLimit;
+            document.getElementById('hpBarFill').style.width = '100%';
+            
+            const limitPercent = (retriLimit / maxHp) * 100;
+            document.getElementById('hpLimitMarker').style.left = (100 - limitPercent) + '%';
+            
+            document.getElementById('btnActionRetri').disabled = true;
+            document.getElementById('btnActionRetri').innerText = 'RETRI';
+            document.getElementById('monsterStatusText').style.display = 'none';
+
+            jalankanHitungMundur(conf.type);
+        }
+
+        function jalankanHitungMundur(monsterType) {
+            const cdDisplay = document.getElementById('countdownDisplay');
+            const statusDisplay = document.getElementById('monsterStatusText');
+            
+            cdDisplay.style.display = 'block';
+            let count = 3; cdDisplay.innerText = count;
+
+            const interval = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    cdDisplay.innerText = count;
+                } else {
+                    clearInterval(interval);
+                    cdDisplay.style.display = 'none';
+                    
+                    // Teks Spesifik Monster Muncul
+                    statusDisplay.innerText = monsterType.toUpperCase() + " TELAH MUNCUL!";
+                    statusDisplay.style.display = 'block';
+                    
+                    document.getElementById('btnActionRetri').disabled = false;
+                    
+                    // Hilangkan teks setelah 1 detik & mulai drop HP
+                    setTimeout(() => {
+                        statusDisplay.style.display = 'none';
+                        gameAnimFrame = requestAnimationFrame(updateDarah);
+                    }, 1000);
+                }
+            }, 1000);
+        }
+
+        // Pengurangan HP Acak Independen untuk mengakali Ping
+        function updateDarah() {
+            if (!isPlaying) return;
+            
+            const drop = drainValues[Math.floor(Math.random() * drainValues.length)];
+            currentHp -= drop;
+            if (currentHp < 0) currentHp = 0;
+            
+            document.getElementById('hpText').innerText = currentHp;
+            document.getElementById('hpBarFill').style.width = ((currentHp / maxHp) * 100) + '%';
+
+            if (currentHp > 0) {
+                gameAnimFrame = requestAnimationFrame(updateDarah);
+            } else {
+                if (document.getElementById('btnActionRetri').disabled === false) eksekusiRetri(true);
+            }
+        }
+
+        async function eksekusiRetri(missed = false) {
+            document.getElementById('btnActionRetri').disabled = true;
+            cancelAnimationFrame(gameAnimFrame);
+            
+            let finalHp = missed ? 0 : currentHp;
+            let statusAction = finalHp <= retriLimit ? 'SECURED' : 'EARLY';
+            if(missed) statusAction = 'MISSED';
+
+            document.getElementById('btnActionRetri').innerText = statusAction;
+            const scoreData = { round: currentRound, hp: finalHp, status: statusAction, time: Date.now() };
+            
+            // Pengiriman Data Aman tanpa butuh RPC (Murni Update Database)
+            try {
+                const { data: room, error: errFetch } = await supabaseB.from('retri_rooms').select('p1_scores, p2_scores').eq('id', currentRoomId).single();
+                if (errFetch) throw errFetch;
+
+                let updates = {};
+                if (myRole === 'p1') {
+                    const sc = room.p1_scores || []; sc.push(scoreData); updates.p1_scores = sc;
+                } else {
+                    const sc = room.p2_scores || []; sc.push(scoreData); updates.p2_scores = sc;
+                }
+                await supabaseB.from('retri_rooms').update(updates).eq('id', currentRoomId);
+            } catch(e) {
+                console.error("Gagal mengirim skor:", e);
+            }
+        }
+
+        // 6. MATRIKS PENILAIAN CETAK BIRU
+        function evaluasiPemenangRonde(p1Score, p2Score) {
+            isPlaying = false; let roundWinner = null;
+
+            const isP1Secured = p1Score.status === 'SECURED';
+            const isP2Secured = p2Score.status === 'SECURED';
+            const isP1Early = p1Score.status === 'EARLY';
+            const isP2Early = p2Score.status === 'EARLY';
+
+            // Skenario A & B: Prioritas SECURED, cari yang terdekat dengan batas (Angka terbesar <= Limit)
+            if (isP1Secured && isP2Secured) roundWinner = (p1Score.hp > p2Score.hp) ? 'p1' : 'p2';
+            else if (isP1Secured && !isP2Secured) roundWinner = 'p1';
+            else if (isP2Secured && !isP1Secured) roundWinner = 'p2';
+            
+            // Skenario C: Keduanya EARLY, cari yang terdekat batas dari atas (Angka terkecil > Limit)
+            else if (isP1Early && isP2Early) roundWinner = (p1Score.hp < p2Score.hp) ? 'p1' : 'p2';
+            
+            // Skenario D: Early vs Missed
+            else if (isP1Early && p2Score.status === 'MISSED') roundWinner = 'p1';
+            else if (isP2Early && p1Score.status === 'MISSED') roundWinner = 'p2';
+            else roundWinner = (p1Score.hp > p2Score.hp) ? 'p1' : 'p2'; // Fallback
+
+            if (roundWinner === 'p1') p1Wins++; else p2Wins++;
+            updateTampilanDots();
+
+            setTimeout(() => {
+                if (p1Wins === 3 || p2Wins === 3) selesaikanGame(p1Wins === 3 ? 'p1' : 'p2');
+                else {
+                    currentRound++;
+                    if (myRole === 'p1' && supabaseB) supabaseB.from('retri_rooms').update({ current_round: currentRound }).eq('id', currentRoomId).then();
+                    transisiLayar('view-arena', 'view-room', 'mundur');
+                    document.getElementById('roomStatusText').innerText = 'Round Selesai. Bersiap untuk Round ' + currentRound;
+                    document.getElementById('btnReady').innerText = 'READY';
+                    document.getElementById('btnReady').disabled = false;
+                }
+            }, 2500);
+        }
+
+        function updateTampilanDots() {
+            const up = (id, wins) => {
+                const dots = document.getElementById(id).children;
+                for(let i=0; i<3; i++) { if(dots[i]) dots[i].className = 'dot ' + (i < wins ? 'dot-win' : ''); }
+            };
+            up('p1Dots', p1Wins); up('p2Dots', p2Wins);
+        }
+
+        async function selesaikanGame(winnerRole) {
+            const winnerName = winnerRole === 'p1' ? p1Name : p2Name;
+            document.getElementById('resultWinnerText').innerText = 'Pemenang: ' + winnerName;
+            document.getElementById('resultOverlay').style.display = 'flex';
+
+            if (myRole === 'p1' && supabaseB) {
+                try {
+                    await supabaseB.from('retri_rooms').update({ status: 'finished', winner_username: winnerName }).eq('id', currentRoomId);
+                    const { data } = await supabaseB.from('retri_leaderboard').select('wins').eq('username', winnerName).single();
+                    const newWins = data ? data.wins + 1 : 1;
+                    await supabaseB.from('retri_leaderboard').upsert([{ username: winnerName, wins: newWins }]);
+                } catch(e) {}
+            }
+            if (roomChannel && supabaseB) supabaseB.removeChannel(roomChannel);
+        }
+
+        function kembaliKeLobby() {
+            document.getElementById('resultOverlay').style.display = 'none';
+            currentRound = 1; p1Wins = 0; p2Wins = 0; updateTampilanDots();
+            tinggalkanRoom();
+        }
+
+        // 7. INISIALISASI
         async function ambilLeaderboard() {
             if (!supabaseB) return;
             try {
                 const { data, error } = await supabaseB.from('retri_leaderboard').select('*').order('wins', { ascending: false }).limit(5);
-                if (error) throw error;
-                if (data && data.length > 0) {
+                if (!error && data && data.length > 0) {
                     let html = '';
-                    data.forEach((r, i) => {
-                        html += `<div class="leaderboard-item"><span>#${i+1} ${r.username}</span><span>${r.wins} Win</span></div>`;
-                    });
+                    data.forEach((r, i) => { html += `<div class="leaderboard-item"><span>#${i+1} ${r.username}</span><span>${r.wins} Win</span></div>`; });
                     document.getElementById('leaderboardList').innerHTML = html;
-                } else {
-                    document.getElementById('leaderboardList').innerHTML = '<div style="text-align:center; color:#555;">Belum ada juara</div>';
-                }
-            } catch (err) {
-                document.getElementById('leaderboardList').innerHTML = '<div style="text-align:center; color:#555;">Gagal Memuat Data.</div>';
-            }
+                } else document.getElementById('leaderboardList').innerHTML = '<div style="text-align:center; color:#555;">Belum ada juara</div>';
+            } catch (err) {}
         }
 
         window.addEventListener('DOMContentLoaded', () => {
