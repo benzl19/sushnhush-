@@ -451,14 +451,14 @@
 
         const myUsername = localStorage.getItem('sush_curAlias') || 'Ninja_' + Math.floor(Math.random() * 1000);
 
-        // Initialize Supabase client
         try {
             if (window.supabase) {
                 const URL_B = 'https://znbyjoapajjonerfannn.supabase.co';
-                const KEY_B = 'MASUKKAN_ANON_KEY_SUPABASE_ANDA_DI_SINI';
+                const KEY_B = 'sb_publishable_ELkRTe17wW5hk7kR6mw3SA_jmq4L8fZ';
                 supabaseB = window.supabase.createClient(URL_B, KEY_B);
             }
         } catch (e) {
+
             console.error("Supabase Initialization Error:", e);
         }
 
