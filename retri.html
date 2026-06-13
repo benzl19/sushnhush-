@@ -25,7 +25,7 @@
             position: relative; background-color: var(--bg-color); overflow: hidden;
         }
 
-        /* TRANSISI iOS ANTI-MACET */
+        
         .view-panel {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             display: flex; flex-direction: column; padding: 20px; box-sizing: border-box;
@@ -61,7 +61,7 @@
         }
         input[type="text"]:focus { outline: none; border-color: var(--neon-cyan); box-shadow: 0 0 10px rgba(69, 243, 255, 0.3); }
 
-        /* UI MEKANIK GAME */
+        
         .versus-box { text-align: center; margin-bottom: 20px; }
         .player-name { font-size: 20px; color: #fff; }
         .vs-text { color: var(--neon-red); font-weight: bold; margin: 10px 0; }
@@ -123,9 +123,9 @@
 
         <div id="view-room" class="view-panel">
             <div class="top-nav">
-                <button type="button" class="btn-small" id="btnLeaveRoom" onclick="tinggalkanRoom()">← Keluar</button>
+                <button class="btn-small" id="btnLeaveRoom" onclick="tinggalkanRoom()">← Keluar</button>
                 <div style="font-weight:bold; color:var(--neon-cyan);" id="displayRoomId">SH-0000</div>
-                <button type="button" class="btn-small" onclick="salinRoomId()">Salin ID</button>
+                <button class="btn-small" onclick="salinRoomId()">Salin ID</button>
             </div>
 
             <div class="panel-box" style="display: flex; flex-direction: column; justify-content: center;">
@@ -134,14 +134,11 @@
                     <div class="vs-text">VS</div>
                     <div class="player-name" id="p2NameRoom" style="color:#555;">Menunggu Lawan...</div>
                 </div>
-                <div style="text-align:center; margin-top:20px; font-weight:bold; color:var(--neon-cyan);" id="roomStatusText">
-                    Menunggu pemain bergabung...
-                </div>
+                <div style="text-align:center; margin-top:20px; font-weight:bold; color:var(--neon-cyan);" id="roomStatusText">Menunggu pemain bergabung...</div>
             </div>
 
-            <button type="button" id="btnReady" disabled onclick="setReady()">READY</button>
-        </div>
-
+            <button id="btnReady" disabled onclick="setReady()">READY</button>
+        </div>        
 
         <div id="view-arena" class="view-panel">
             <div class="top-nav" style="margin-bottom: 10px;">
@@ -316,50 +313,126 @@
             alert('ID Disalin: ' + currentRoomId);
         }
 
-        function tinggalkanRoom() {
-            if (roomChannel && supabaseB) supabaseB.removeChannel(roomChannel);
-            currentRoomId = null; p1Name = ''; p2Name = ''; myRole = null;
-            bothReady = { p1: false, p2: false };
-            transisiLayar('view-room', 'view-lobby', 'mundur');
-        }
-
-        // 4. SINKRONISASI REALTIME & SKOR
-        function subscribeKeRoom(roomId) {
-            if (!supabaseB) return;
-            if (roomChannel) supabaseB.removeChannel(roomChannel);
+        // --- PERBAIKAN LOGIKA SINKRONISASI ROOM & READY ---
+        function updateRoomUI() {
+            document.getElementById('displayRoomId').innerText = currentRoomId;
+            document.getElementById('p1NameRoom').innerText = p1Name || 'Pemain 1';
+            document.getElementById('p2NameRoom').innerText = p2Name ? p2Name : 'Menunggu Lawan...';
             
-            roomChannel = supabaseB.channel('room_' + roomId)
-            .on('broadcast', { event: 'ready_state' }, (payload) => {
-                if (payload.payload.role === 'p1') bothReady.p1 = true;
-                if (payload.payload.role === 'p2') bothReady.p2 = true;
-                
-                if (bothReady.p1 && bothReady.p2) {
-                    mulaiSiklusRonde();
-                } else {
-                    document.getElementById('roomStatusText').innerText = (payload.payload.role === myRole) ? 'Menunggu lawan ready...' : 'Lawan sudah siap!';
-                }
-            })
-            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'retri_rooms', filter: 'id=eq.' + roomId }, (payload) => {
+            const btnReady = document.getElementById('btnReady');
+            btnReady.disabled = !p2Name;
+        }
+
+        function subscribeKeRoom(roomId) {
+            if (roomChannel) supabase.removeChannel(roomChannel);
+
+            roomChannel = supabase.channel('room_' + roomId)
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'retri_rooms', filter: 'id=eq.'+roomId }, (payload) => {
                 const newData = payload.new;
-                if (newData.p2_username && !p2Name) { p2Name = newData.p2_username; updateRoomUI(); }
                 
-                // Cek Skor Ronde
-                const p1Scores = newData.p1_scores || [];
-                const p2Scores = newData.p2_scores || [];
-                
-                if (p1Scores.length === currentRound && p2Scores.length === currentRound && isPlaying) {
-                    evaluasiPemenangRonde(p1Scores[currentRound-1], p2Scores[currentRound-1]);
+                // Sinkronisasi Nama Player
+                if (newData.p2_username && !p2Name) {
+                    p2Name = newData.p2_username;
+                    updateRoomUI();
                 }
-            }).subscribe();
+
+                // Pantau Status Kesiapan dari Kolom Database Absolut
+                let statusText = "";
+                if (newData.p1_ready && newData.p2_ready) {
+                    if (isPlaying === false) {
+                        mulaiSiklusRonde();
+                    }
+                    return;
+                } else if (newData.p1_ready) {
+                    statusText = myRole === 'p1' ? "Menunggu lawan ready..." : "Lawan sudah siap!";
+                } else if (newData.p2_ready) {
+                    statusText = myRole === 'p2' ? "Menunggu lawan ready..." : "Lawan sudah siap!";
+                } else {
+                    statusText = "Lawan ditemukan! Tekan READY.";
+                }
+                
+                if(p2Name) document.getElementById('roomStatusText').innerText = statusText;
+            })
+            .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'retri_rooms', filter: 'id=eq.'+roomId }, () => {
+                // Jika room dihapus oleh server/lawan saat kita di dalam, tendang keluar ke lobi
+                alert('Room telah dibubarkan.');
+                tinggalkanRoomLocally();
+            })
+            .subscribe();
         }
 
-        function setReady() {
-            document.getElementById('btnReady').disabled = true;
-            document.getElementById('btnReady').innerText = 'WAITING...';
-            if (roomChannel) roomChannel.send({ type: 'broadcast', event: 'ready_state', payload: { role: myRole } });
+        async function setReady() {
+            const btnReady = document.getElementById('btnReady');
+            btnReady.disabled = true;
+            btnReady.innerText = 'WAITING...';
+
+            const updates = myRole === 'p1' ? { p1_ready: true } : { p2_ready: true };
+            
+            const { error } = await supabase.from('retri_rooms')
+                .update(updates)
+                .eq('id', currentRoomId);
+
+            if (error) {
+                alert('Gagal mengirim status ready.');
+                btnReady.disabled = false;
+                btnReady.innerText = 'READY';
+            }
         }
 
-        // 5. ENGINE GAMEPLAY (ARENA)
+        async function tinggalkanRoom() {
+            if (!currentRoomId) return;
+            
+            try {
+                // Ambil data terbaru untuk cek siapa saja yang tersisa di dalam room
+                const { data: room } = await supabase.from('retri_rooms').select('*').eq('id', currentRoomId).single();
+                
+                if (room) {
+                    if (myRole === 'p1') {
+                        if (!room.p2_username) {
+                            // P1 sendirian di room, langsung hapus baris dari database
+                            await supabase.from('retri_rooms').delete().eq('id', currentRoomId);
+                        } else {
+                            // P1 keluar tapi masih ada P2, pindahkan kepemilikan P2 menjadi P1
+                            await supabase.from('retri_rooms').update({
+                                p1_username: room.p2_username,
+                                p2_username: null,
+                                p1_ready: room.p2_ready,
+                                p2_ready: false,
+                                status: 'waiting'
+                            }).eq('id', currentRoomId);
+                        }
+                    } else {
+                        // P2 keluar, kosongkan slot P2 dan kembalikan status ke waiting
+                        await supabase.from('retri_rooms').update({
+                            p2_username: null,
+                            p2_ready: false,
+                            status: 'waiting'
+                        }).eq('id', currentRoomId);
+                    }
+                }
+            } catch (e) {
+                console.error("Error saat membersihkan room:", e);
+            } finally {
+                tinggalkanRoomLocally();
+            }
+        }
+
+        function tinggalkanRoomLocally() {
+            if (roomChannel) supabase.removeChannel(roomChannel);
+            currentRoomId = null;
+            myRole = null;
+            p1Name = '';
+            p2Name = '';
+            isPlaying = false;
+            
+            // Reset text UI tombol
+            const btnReady = document.getElementById('btnReady');
+            btnReady.innerText = 'READY';
+            document.getElementById('roomStatusText').innerText = "Menunggu pemain bergabung...";
+            
+            navigasi('view-lobby');
+        }
+
         function mulaiSiklusRonde() {
             bothReady = { p1: false, p2: false }; isPlaying = true;
             transisiLayar('view-room', 'view-arena', 'maju');
