@@ -14,335 +14,79 @@
             --neon-green: #39ff14;
             --dark-gray: #1f2833;
         }
-
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            overflow: hidden;
-            width: 100vw;
-            height: 100dvh;
-            display: flex;
-            justify-content: center;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 420px;
-            height: 100%;
-            position: relative;
-            background-color: var(--bg-color);
-            overflow: hidden;
-        }
-
-        .view-panel {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-            box-sizing: border-box;
-            background-color: var(--bg-color);
-            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease;
-            transform: translateX(100%);
-            opacity: 0;
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        .view-panel.active {
-            transform: translateX(0);
-            opacity: 1;
-            pointer-events: auto;
-            z-index: 2;
-        }
-
-        .view-panel.slide-left {
-            transform: translateX(-100%);
-            opacity: 0;
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        h1 {
-            margin: 0;
-            text-align: center;
-            color: #fff;
-            text-shadow: 0 0 10px var(--neon-cyan);
-            margin-bottom: 20px;
-            font-weight: 600;
-        }
-
-        .top-nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-
-        .panel-box {
-            background: rgba(31, 40, 51, 0.5);
-            border: 1px solid var(--dark-gray);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-
-        .leaderboard-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px dashed var(--dark-gray);
-        }
-
-        button {
-            background: transparent;
-            border: 1px solid var(--neon-cyan);
-            color: var(--neon-cyan);
-            padding: 15px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: all 0.2s;
-            width: 100%;
-            margin-bottom: 15px;
-            box-shadow: 0 0 10px rgba(69, 243, 255, 0.2);
-        }
-
-        button:active {
-            transform: scale(0.96);
-            background: var(--neon-cyan);
-            color: var(--bg-color);
-        }
-
-        button:disabled {
-            border-color: #555;
-            color: #555;
-            cursor: not-allowed;
-            box-shadow: none;
-            background: transparent;
-        }
-
-        .btn-red {
-            border-color: var(--neon-red);
-            color: var(--neon-red);
-            box-shadow: 0 0 10px rgba(255, 74, 74, 0.2);
-        }
-
-        .btn-red:active {
-            background: var(--neon-red);
-            color: var(--bg-color);
-            box-shadow: 0 0 20px var(--neon-red);
-        }
-
-        .btn-small {
-            padding: 8px 12px;
-            font-size: 12px;
-            width: auto;
-            margin-bottom: 0;
-        }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 15px;
-            background: transparent;
-            border: 1px solid var(--dark-gray);
-            color: #fff;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            box-sizing: border-box;
-            text-align: center;
-            font-size: 18px;
-            letter-spacing: 2px;
-        }
-
-        input[type="text"]:focus {
-            outline: none;
-            border-color: var(--neon-cyan);
-            box-shadow: 0 0 10px rgba(69, 243, 255, 0.3);
-        }
-
-        .versus-box {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .player-name {
-            font-size: 20px;
-            color: #fff;
-        }
-
-        .vs-text {
-            color: var(--neon-red);
-            font-weight: bold;
-            margin: 10px 0;
-        }
-
-        .dots-container {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: var(--dark-gray);
-            transition: all 0.3s;
-        }
-
-        .dot-win {
-            background: var(--neon-green);
-            box-shadow: 0 0 8px var(--neon-green);
-        }
-
-        .monster-name {
-            text-align: center;
-            font-size: 24px;
-            color: var(--neon-cyan);
-            margin-top: 20px;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-
-        .monster-status {
-            text-align: center;
-            font-size: 18px;
-            color: var(--neon-red);
-            margin: 10px 0;
-            font-weight: bold;
-            display: none;
-        }
-
-        .health-bar-container {
-            width: 100%;
-            height: 40px;
-            background: var(--dark-gray);
-            border: 2px solid #555;
-            border-radius: 20px;
-            margin: 20px 0;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .health-bar-fill {
-            height: 100%;
-            width: 100%;
-            background: linear-gradient(90deg, #ff4a4a, #ff9e9e);
-        }
-
-        .health-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #fff;
-            font-weight: bold;
-            font-size: 18px;
-            text-shadow: 1px 1px 2px #000;
-        }
-
-        .limit-marker {
-            position: absolute;
-            top: 0;
-            height: 100%;
-            width: 2px;
-            background: var(--neon-green);
-            box-shadow: 0 0 10px var(--neon-green);
-            z-index: 2;
-        }
-
-        .btn-retri {
-            height: 100px;
-            font-size: 32px;
-            border-radius: 20px;
-            margin-top: auto;
-            margin-bottom: 20px;
-        }
-
-        .countdown-text {
-            text-align: center;
-            font-size: 60px;
-            color: var(--neon-cyan);
-            font-weight: bold;
-            margin: 20px 0;
-            text-shadow: 0 0 20px var(--neon-cyan);
-            display: none;
-        }
-
-        #resultOverlay {
-            display: none;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            min-height: 100vh;
-            background: rgba(11, 12, 16, 0.95);
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
-            padding: 20px;
-            box-sizing: border-box;
-        }
+        body { margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-color); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; overflow: hidden; width: 100vw; height: 100dvh; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 420px; height: 100%; position: relative; background-color: var(--bg-color); overflow: hidden; }
+        .view-panel { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; background-color: var(--bg-color); transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease; transform: translateX(100%); opacity: 0; pointer-events: none; z-index: 1; }
+        .view-panel.active { transform: translateX(0); opacity: 1; pointer-events: auto; z-index: 2; }
+        .view-panel.slide-left { transform: translateX(-100%); opacity: 0; pointer-events: none; z-index: 1; }
+        h1 { margin: 0; text-align: center; color: #fff; text-shadow: 0 0 10px var(--neon-cyan); margin-bottom: 20px; font-weight: 600; }
+        .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .panel-box { background: rgba(31, 40, 51, 0.5); border: 1px solid var(--dark-gray); border-radius: 10px; padding: 15px; margin-bottom: 20px; }
+        .leaderboard-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--dark-gray); }
+        button { background: transparent; border: 1px solid var(--neon-cyan); color: var(--neon-cyan); padding: 15px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: all 0.2s; width: 100%; margin-bottom: 15px; box-shadow: 0 0 10px rgba(69, 243, 255, 0.2); }
+        button:active { transform: scale(0.96); background: var(--neon-cyan); color: var(--bg-color); }
+        button:disabled { border-color: #555; color: #555; cursor: not-allowed; box-shadow: none; background: transparent; }
+        .btn-red { border-color: var(--neon-red); color: var(--neon-red); box-shadow: 0 0 10px rgba(255, 74, 74, 0.2); }
+        .btn-red:active { background: var(--neon-red); color: var(--bg-color); box-shadow: 0 0 20px var(--neon-red); }
+        .btn-small { padding: 8px 12px; font-size: 12px; width: auto; margin-bottom: 0; }
+        input[type="text"] { width: 100%; padding: 15px; background: transparent; border: 1px solid var(--dark-gray); color: #fff; border-radius: 8px; margin-bottom: 15px; box-sizing: border-box; text-align: center; font-size: 18px; letter-spacing: 2px; }
+        input[type="text"]:focus { outline: none; border-color: var(--neon-cyan); box-shadow: 0 0 10px rgba(69, 243, 255, 0.3); }
+        .versus-box { text-align: center; margin-bottom: 20px; }
+        .player-name { font-size: 20px; color: #fff; }
+        .vs-text { color: var(--neon-red); font-weight: bold; margin: 10px 0; }
+        .dots-container { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--dark-gray); transition: all 0.3s; }
+        .dot-win { background: var(--neon-green); box-shadow: 0 0 8px var(--neon-green); }
+        .dot-lose { background: var(--neon-red); box-shadow: 0 0 8px var(--neon-red); }
+        .monster-name { text-align: center; font-size: 24px; color: var(--neon-cyan); margin-top: 20px; letter-spacing: 2px; text-transform: uppercase; }
+        .monster-status { text-align: center; font-size: 18px; color: var(--neon-red); margin: 10px 0; font-weight: bold; display: none; }
+        .health-bar-container { width: 100%; height: 40px; background: var(--dark-gray); border: 2px solid #555; border-radius: 20px; margin: 20px 0; position: relative; overflow: hidden; }
+                .health-bar-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #ff4a4a, #ff9e9e); transform-origin: left; }
+        .health-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; font-weight: bold; font-size: 18px; text-shadow: 1px 1px 2px #000; }
+        .limit-marker { position: absolute; top: 0; height: 100%; width: 2px; background: var(--neon-green); box-shadow: 0 0 10px var(--neon-green); z-index: 2; }
+        .btn-retri { height: 100px; font-size: 32px; border-radius: 20px; margin-top: auto; margin-bottom: 20px; }
+        .countdown-text { text-align: center; font-size: 60px; color: var(--neon-cyan); font-weight: bold; margin: 20px 0; text-shadow: 0 0 20px var(--neon-cyan); display: none; }
+        #resultOverlay { display: none; position: absolute; top: 0; left: 0; width: 100%; min-height: 100vh; background: rgba(11, 12, 16, 0.95); flex-direction: column; justify-content: center; align-items: center; z-index: 10; padding: 20px; box-sizing: border-box; }
     </style>
 </head>
 <body>
     <div class="container">
-
         <div id="view-main" class="view-panel active">
             <div class="top-nav">
-                <div style="color:#555; font-size:12px;">FASE 4 FINAL</div>
-                <button type="button" class="btn-small" onclick="window.location.href='beranda.html'">Kembali</button>
+                <div style="font-weight:bold; color:var(--neon-cyan);" id="titleLang">RETRI CONTEST</div>
+                <button type="button" class="btn-small" onclick="window.location.href='beranda.html'" id="btnBackToSush">Kembali ke SushnHush</button>
             </div>
-            
             <h1>RETRIBUTION<br>CONTEST</h1>
-            
             <div class="panel-box">
-                <h3 style="margin-bottom:10px; color:var(--neon-cyan); text-align:center;">LEADERBOARD</h3>
+                <h3 style="margin-bottom:10px; color:var(--neon-cyan); text-align:center;" id="leaderboardTitle">LEADERBOARD</h3>
                 <div id="leaderboardList">
                     <div style="text-align:center; color:#555;">Memuat data...</div>
                 </div>
             </div>
-
             <div style="text-align:center; margin-bottom: 15px; font-size: 14px;">
-                Bermain sebagai: <span id="displayUsername" style="color: var(--neon-green); font-weight:bold;">...</span>
+                <span id="playingAsText">Bermain sebagai:</span> <span id="displayUsername" style="color: var(--neon-green); font-weight:bold;">...</span>
             </div>
-            <button type="button" onclick="transisiLayar('view-main', 'view-lobby', 'maju')">Siap, Main</button>
+            <button type="button" onclick="transisiLayar('view-main', 'view-lobby', 'maju')" id="btnSiapMain">Siap, Main</button>
         </div>
-
         <div id="view-lobby" class="view-panel">
             <div class="top-nav">
                 <button type="button" class="btn-small" onclick="transisiLayar('view-lobby', 'view-main', 'mundur')">← Back</button>
                 <div style="font-weight:bold; color:var(--neon-cyan);">LOBBY</div>
                 <div style="width: 60px;"></div>
             </div>
-
             <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
-                <button type="button" onclick="buatRoom()">Buat Room Baru</button>
+                <button type="button" onclick="buatRoom()" id="btnBuatRoom">Buat Room Baru</button>
                 <div style="text-align: center; margin: 20px 0; color: #555;">- ATAU -</div>
                 <input type="text" id="inputRoomId" placeholder="Masukkan ID Room" maxlength="10" autocomplete="off">
-                <button type="button" class="btn-red" onclick="joinRoom()">Join Room</button>
+                <button type="button" class="btn-red" onclick="joinRoom()" id="btnJoinRoom">Join Room</button>
             </div>
         </div>
-
         <div id="view-room" class="view-panel">
             <div class="top-nav">
                 <button type="button" class="btn-small" id="btnLeaveRoom" onclick="tinggalkanRoom()">← Keluar</button>
                 <div style="font-weight:bold; color:var(--neon-cyan);" id="displayRoomId">SH-0000</div>
-                <button type="button" class="btn-small" onclick="salinRoomId()">Salin ID</button>
+                <button type="button" class="btn-small" onclick="salinRoomId()" id="btnSalin">Salin ID</button>
             </div>
-
             <div class="panel-box" style="display: flex; flex-direction: column; justify-content: center;">
                 <div class="versus-box">
                     <div class="player-name" id="p1NameRoom">Pemain 1</div>
@@ -353,17 +97,14 @@
                     Menunggu pemain bergabung...
                 </div>
             </div>
-
             <button type="button" id="btnReady" disabled onclick="setReady()">READY</button>
         </div>
-
         <div id="view-arena" class="view-panel">
             <div class="top-nav" style="margin-bottom: 10px;">
                 <div style="font-size:12px; color:#555;" id="arenaRoundText">Round 1</div>
                 <div style="font-weight:bold; color:var(--neon-cyan);" id="arenaRoomId">SH-0000</div>
             </div>
-
-            <div style="display:flex; justify-content:space-between; padding:0 20px;">
+                        <div style="display:flex; justify-content:space-between; padding:0 20px;">
                 <div style="text-align:center;">
                     <div id="arenaP1Name" style="font-size:14px; font-weight:bold;">P1</div>
                     <div class="dots-container" id="p1Dots">
@@ -377,39 +118,31 @@
                     </div>
                 </div>
             </div>
-
             <div class="monster-name" id="monsterName">TURTLE</div>
-            <div class="countdown-text" id="countdownDisplay">3</div>
+            <div class="countdown-text" id="countdownDisplay">5</div>
             <div class="monster-status" id="monsterStatusText">MUNCUL!</div>
-
             <div class="health-bar-container">
                 <div class="health-bar-fill" id="hpBarFill"></div>
                 <div class="limit-marker" id="hpLimitMarker" style="left: 10%;"></div>
                 <div class="health-text"><span id="hpText">0</span> / <span id="hpMaxText">0</span></div>
             </div>
-            
             <div style="text-align:center; font-size:14px; color:var(--neon-green); margin-bottom:20px;">
                 Batas Retri: <span id="retriLimitText">0</span>
             </div>
-
-            <button type="button" class="btn-retri btn-red" id="btnActionRetri" disabled onclick="eksekusiRetri()">RETRI</button>
+            <button type="button" class="btn-retri btn-red" id="btnActionRetri" disabled onclick="eksekusiRetri(false)">RETRI</button>
         </div>
-
         <div id="resultOverlay">
             <h1 class="title-neon">MATCH SELESAI</h1>
             <div style="font-size:24px; margin-bottom:30px; color:#fff;" id="resultWinnerText">Pemenang: -</div>
             <button type="button" onclick="kembaliKeLobby()">Kembali ke Lobby</button>
             <button type="button" onclick="window.location.href='beranda.html'" class="btn-red">Kembali ke SushnHush</button>
         </div>
-
     </div>
-        <script>
-        // Handle UI panel transitions
+    <script>
         function transisiLayar(idAsal, idTujuan, arah = 'maju') {
             const layarAsal = document.getElementById(idAsal);
             const layarTujuan = document.getElementById(idTujuan);
             if (!layarAsal || !layarTujuan) return;
-
             if (arah === 'maju') {
                 layarAsal.classList.remove('active');
                 layarAsal.classList.add('slide-left');
@@ -421,36 +154,31 @@
                 layarTujuan.classList.add('active');
             }
         }
-
-        // Global state and configurations
         let supabaseB = null; 
         let roomChannel = null;
         let currentRoomId = null;
         let p1Name = '';
         let p2Name = '';
         let myRole = null;
-        
         let currentRound = 1;
         let p1Wins = 0;
         let p2Wins = 0;
-
         let gameAnimFrame;
         let isPlaying = false;
         let maxHp = 0;
         let currentHp = 0;
         let retriLimit = 0;
-
+        let animStartTime = null;
+        let animDuration = 0;
+        let hasPressed = false;
         const roundConfigs = {
-            1: { type: 'Turtle', hp: 15000, limit: 1700 },
-            2: { type: 'Turtle', hp: 18000, limit: 2300 },
-            3: { type: 'Turtle', hp: 20000, limit: 2800 },
-            4: { type: 'Lord', hp: 22000, limit: 3000 },
-            5: { type: 'Lord Evolve', hp: 30000, limit: 3000 }
+            1: { type: 'TURTLE', hp: 15000, limit: 1700, minTime: 8000, maxTime: 9000 },
+            2: { type: 'TURTLE', hp: 18000, limit: 2000, minTime: 7000, maxTime: 8000 },
+            3: { type: 'TURTLE', hp: 20000, limit: 2200, minTime: 6000, maxTime: 7000 },
+            4: { type: 'LORD', hp: 22000, limit: 3000, minTime: 5000, maxTime: 6000 },
+            5: { type: 'LORD EVOLVE', hp: 30000, limit: 3000, minTime: 4000, maxTime: 5000 }
         };
-        const drainValues = [150, 185, 225, 250, 285, 300];
-
         const myUsername = localStorage.getItem('sush_curAlias') || 'Ninja_' + Math.floor(Math.random() * 1000);
-
         try {
             if (window.supabase) {
                 const URL_B = 'https://znbyjoapajjonerfannn.supabase.co';
@@ -458,19 +186,12 @@
                 supabaseB = window.supabase.createClient(URL_B, KEY_B);
             }
         } catch (e) {
-
-            console.error("Supabase Initialization Error:", e);
+            console.error(e);
         }
-
-        // Room management functions
-        function generateRoomId() { 
-            return 'SH-' + Math.floor(1000 + Math.random() * 9000); 
-        }
-
+        function generateRoomId() { return 'SH-' + Math.floor(1000 + Math.random() * 9000); }
         function updateRoomUI() {
             document.getElementById('displayRoomId').innerText = currentRoomId;
             document.getElementById('p1NameRoom').innerText = p1Name || 'Pemain 1';
-            
             const btnReady = document.getElementById('btnReady');
             if (p2Name) {
                 document.getElementById('p2NameRoom').innerText = p2Name;
@@ -483,97 +204,62 @@
                 btnReady.disabled = true;
             }
         }
-
-        async function buatRoom() {
-            if (!supabaseB) return alert('Koneksi Database Terputus!');
-            const btn = event.target; 
-            btn.innerText = 'Membuat...'; 
+                async function buatRoom() {
+            if (!supabaseB) return;
+            const btn = document.getElementById('btnBuatRoom'); 
             btn.disabled = true;
-
             const newId = generateRoomId();
             try {
                 const { error } = await supabaseB.from('retri_rooms').insert([
-                    { id: newId, p1_username: myUsername, status: 'waiting' }
+                    { id: newId, p1_username: myUsername, status: 'waiting', p1_ready: false, p2_ready: false, p1_scores: [], p2_scores: [] }
                 ]);
                 if (error) throw error;
-
                 currentRoomId = newId; 
                 myRole = 'p1'; 
                 p1Name = myUsername; 
                 p2Name = '';
-                
                 updateRoomUI(); 
                 transisiLayar('view-lobby', 'view-room', 'maju');
                 subscribeKeRoom(newId);
-            } catch (err) { 
-                alert('Error: ' + err.message); 
-            } finally { 
-                btn.innerText = 'Buat Room Baru'; 
-                btn.disabled = false; 
-            }
+            } catch (err) { } finally { btn.disabled = false; }
         }
-
         async function joinRoom() {
-            if (!supabaseB) return alert('Koneksi Database Terputus!');
+            if (!supabaseB) return;
             const inputId = document.getElementById('inputRoomId').value.trim().toUpperCase();
-            if (!inputId) return alert('Masukkan ID Room!');
-
-            const btn = event.target; 
-            btn.innerText = 'Mencari...'; 
+            if (!inputId) return;
+            const btn = document.getElementById('btnJoinRoom'); 
             btn.disabled = true;
-
             try {
                 const { data, error: fetchErr } = await supabaseB.from('retri_rooms').select('*').eq('id', inputId).single();
-                if (fetchErr || !data) throw new Error('Room tidak ditemukan!');
-                if (data.p2_username) throw new Error('Room penuh!');
-
+                if (fetchErr || !data) throw new Error();
+                if (data.p2_username) throw new Error();
                 const { error: updateErr } = await supabaseB.from('retri_rooms').update({ 
                     p2_username: myUsername, status: 'full' 
                 }).eq('id', inputId);
                 if (updateErr) throw updateErr;
-
                 currentRoomId = inputId; 
                 myRole = 'p2'; 
                 p1Name = data.p1_username; 
                 p2Name = myUsername;
-                
                 updateRoomUI(); 
                 transisiLayar('view-lobby', 'view-room', 'maju');
                 subscribeKeRoom(inputId);
-            } catch (err) { 
-                alert(err.message); 
-            } finally { 
-                btn.innerText = 'Join Room'; 
-                btn.disabled = false; 
-                document.getElementById('inputRoomId').value = ''; 
-            }
+            } catch (err) { } finally { btn.disabled = false; document.getElementById('inputRoomId').value = ''; }
         }
-
-        function salinRoomId() {
-            navigator.clipboard.writeText(currentRoomId);
-            alert('ID Disalin: ' + currentRoomId);
-        }
-
-        // Realtime subscription and readiness sync
+        function salinRoomId() { navigator.clipboard.writeText(currentRoomId); }
         function subscribeKeRoom(roomId) {
             if (!supabaseB) return;
             if (roomChannel) supabaseB.removeChannel(roomChannel);
-
             roomChannel = supabaseB.channel('room_' + roomId)
             .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'retri_rooms', filter: 'id=eq.'+roomId }, (payload) => {
                 const newData = payload.new;
-                
                 if (newData.p2_username && !p2Name) {
                     p2Name = newData.p2_username;
                     updateRoomUI();
                 }
-
                 let statusText = "";
                 if (newData.p1_ready && newData.p2_ready) {
-                    if (isPlaying === false) {
-                        mulaiSiklusRonde();
-                    }
-                    return;
+                    if (isPlaying === false) { mulaiSiklusRonde(); }
                 } else if (newData.p1_ready) {
                     statusText = myRole === 'p1' ? "Menunggu lawan ready..." : "Lawan sudah siap!";
                 } else if (newData.p2_ready) {
@@ -581,9 +267,7 @@
                 } else {
                     statusText = "Lawan ditemukan! Tekan READY.";
                 }
-                
-                if(p2Name) document.getElementById('roomStatusText').innerText = statusText;
-
+                if (p2Name && (!newData.p1_ready || !newData.p2_ready)) document.getElementById('roomStatusText').innerText = statusText;
                 const p1Scores = newData.p1_scores || [];
                 const p2Scores = newData.p2_scores || [];
                 if (p1Scores.length === currentRound && p2Scores.length === currentRound && isPlaying) {
@@ -591,63 +275,29 @@
                 }
             })
             .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'retri_rooms', filter: 'id=eq.'+roomId }, () => {
-                alert('Room telah dibubarkan oleh pemilik.');
                 tinggalkanRoomLocally();
-            })
-            .subscribe();
+            }).subscribe();
         }
-
         async function setReady() {
             if (!supabaseB) return;
             const btnReady = document.getElementById('btnReady');
             btnReady.disabled = true;
-            btnReady.innerText = 'WAITING...';
-
             const updates = myRole === 'p1' ? { p1_ready: true } : { p2_ready: true };
-            
-            const { error } = await supabaseB.from('retri_rooms').update(updates).eq('id', currentRoomId);
-            if (error) {
-                alert('Gagal mengirim status ready.');
-                btnReady.disabled = false;
-                btnReady.innerText = 'READY';
-            }
+            await supabaseB.from('retri_rooms').update(updates).eq('id', currentRoomId);
         }
-
-        // Room cleanup logic
         async function tinggalkanRoom() {
             if (!currentRoomId || !supabaseB) return;
-            
             try {
                 const { data: room } = await supabaseB.from('retri_rooms').select('*').eq('id', currentRoomId).single();
-                
                 if (room) {
                     if (myRole === 'p1') {
-                        if (!room.p2_username) {
-                            await supabaseB.from('retri_rooms').delete().eq('id', currentRoomId);
-                        } else {
-                            await supabaseB.from('retri_rooms').update({
-                                p1_username: room.p2_username,
-                                p2_username: null,
-                                p1_ready: room.p2_ready,
-                                p2_ready: false,
-                                status: 'waiting'
-                            }).eq('id', currentRoomId);
-                        }
+                        await supabaseB.from('retri_rooms').delete().eq('id', currentRoomId);
                     } else {
-                        await supabaseB.from('retri_rooms').update({
-                            p2_username: null,
-                            p2_ready: false,
-                            status: 'waiting'
-                        }).eq('id', currentRoomId);
+                        await supabaseB.from('retri_rooms').update({ p2_username: null, p2_ready: false, status: 'waiting' }).eq('id', currentRoomId);
                     }
                 }
-            } catch (e) {
-                console.error("Room cleanup error:", e);
-            } finally {
-                tinggalkanRoomLocally();
-            }
+            } catch (e) {} finally { tinggalkanRoomLocally(); }
         }
-
         function tinggalkanRoomLocally() {
             if (roomChannel && supabaseB) supabaseB.removeChannel(roomChannel);
             currentRoomId = null;
@@ -655,54 +305,50 @@
             p1Name = '';
             p2Name = '';
             isPlaying = false;
-            
             const btnReady = document.getElementById('btnReady');
-            btnReady.innerText = 'READY';
+            btnReady.disabled = true;
             document.getElementById('roomStatusText').innerText = "Menunggu pemain bergabung...";
-            
             transisiLayar('view-room', 'view-lobby', 'mundur');
         }
-
-        // Gameplay mechanics and independent animation
+        window.addEventListener('beforeunload', () => {
+            if (myRole === 'p1' && currentRoomId && !p2Name && supabaseB) {
+                supabaseB.from('retri_rooms').delete().eq('id', currentRoomId).then();
+            } else if (currentRoomId && supabaseB && myRole === 'p1') {
+                supabaseB.from('retri_rooms').delete().eq('id', currentRoomId).then();
+            }
+        });
         function mulaiSiklusRonde() {
             isPlaying = true;
+            hasPressed = false;
+            animStartTime = null;
             transisiLayar('view-room', 'view-arena', 'maju');
-            
             document.getElementById('arenaRoomId').innerText = currentRoomId;
             document.getElementById('arenaRoundText').innerText = 'Round ' + currentRound;
             document.getElementById('arenaP1Name').innerText = p1Name;
             document.getElementById('arenaP2Name').innerText = p2Name;
-            
             const conf = roundConfigs[currentRound];
             document.getElementById('monsterName').innerText = conf.type;
-            
             maxHp = conf.hp; 
             retriLimit = conf.limit; 
             currentHp = maxHp;
-            
+            animDuration = conf.minTime + Math.random() * (conf.maxTime - conf.minTime);
             document.getElementById('hpMaxText').innerText = maxHp;
             document.getElementById('hpText').innerText = maxHp;
             document.getElementById('retriLimitText').innerText = retriLimit;
             document.getElementById('hpBarFill').style.width = '100%';
-            
             const limitPercent = (retriLimit / maxHp) * 100;
-            document.getElementById('hpLimitMarker').style.left = (100 - limitPercent) + '%';
-            
+            document.getElementById('hpLimitMarker').style.left = limitPercent + '%';
             document.getElementById('btnActionRetri').disabled = true;
             document.getElementById('btnActionRetri').innerText = 'RETRI';
             document.getElementById('monsterStatusText').style.display = 'none';
-
             jalankanHitungMundur(conf.type);
         }
-
-        function jalankanHitungMundur(monsterType) {
+                function jalankanHitungMundur(monsterType) {
             const cdDisplay = document.getElementById('countdownDisplay');
             const statusDisplay = document.getElementById('monsterStatusText');
-            
             cdDisplay.style.display = 'block';
-            let count = 3; 
+            let count = 5; 
             cdDisplay.innerText = count;
-
             const interval = setInterval(() => {
                 count--;
                 if (count > 0) {
@@ -710,12 +356,10 @@
                 } else {
                     clearInterval(interval);
                     cdDisplay.style.display = 'none';
-                    
-                    statusDisplay.innerText = monsterType.toUpperCase() + " TELAH MUNCUL!";
+                    const spawnText = monsterType === 'TURTLE' ? 'TURTLE TELAH MUNCUL!' : 'LORD EVOLVED TELAH BANGKIT!';
+                    statusDisplay.innerText = spawnText;
                     statusDisplay.style.display = 'block';
-                    
                     document.getElementById('btnActionRetri').disabled = false;
-                    
                     setTimeout(() => {
                         statusDisplay.style.display = 'none';
                         gameAnimFrame = requestAnimationFrame(updateDarah);
@@ -723,39 +367,31 @@
                 }
             }, 1000);
         }
-
-        function updateDarah() {
+        function updateDarah(timestamp) {
             if (!isPlaying) return;
-            
-            const drop = drainValues[Math.floor(Math.random() * drainValues.length)];
-            currentHp -= drop;
+            if (!animStartTime) animStartTime = timestamp;
+            const elapsed = timestamp - animStartTime;
+            currentHp = maxHp - (elapsed / animDuration) * maxHp;
             if (currentHp < 0) currentHp = 0;
-            
-            document.getElementById('hpText').innerText = currentHp;
+            document.getElementById('hpText').innerText = Math.floor(currentHp);
             document.getElementById('hpBarFill').style.width = ((currentHp / maxHp) * 100) + '%';
-
             if (currentHp > 0) {
                 gameAnimFrame = requestAnimationFrame(updateDarah);
             } else {
-                if (document.getElementById('btnActionRetri').disabled === false) eksekusiRetri(true);
+                if (!hasPressed) eksekusiRetri(true);
             }
         }
-
         async function eksekusiRetri(missed = false) {
+            hasPressed = true;
             document.getElementById('btnActionRetri').disabled = true;
-            cancelAnimationFrame(gameAnimFrame);
-            
-            let finalHp = missed ? 0 : currentHp;
+            let finalHp = missed ? 0 : Math.floor(currentHp);
             let statusAction = finalHp <= retriLimit ? 'SECURED' : 'EARLY';
-            if(missed) statusAction = 'MISSED';
-
+            if (missed) statusAction = 'MISSED';
             document.getElementById('btnActionRetri').innerText = statusAction;
             const scoreData = { round: currentRound, hp: finalHp, status: statusAction, time: Date.now() };
-            
             try {
                 const { data: room, error: errFetch } = await supabaseB.from('retri_rooms').select('p1_scores, p2_scores').eq('id', currentRoomId).single();
                 if (errFetch) throw errFetch;
-
                 let updates = {};
                 if (myRole === 'p1') {
                     const sc = room.p1_scores || []; 
@@ -767,21 +403,16 @@
                     updates.p2_scores = sc;
                 }
                 await supabaseB.from('retri_rooms').update(updates).eq('id', currentRoomId);
-            } catch(e) {
-                console.error("Score submission error:", e);
-            }
+            } catch(e) {}
         }
-
-        // Round evaluation matrix
         function evaluasiPemenangRonde(p1Score, p2Score) {
             isPlaying = false; 
+            cancelAnimationFrame(gameAnimFrame);
             let roundWinner = null;
-
             const isP1Secured = p1Score.status === 'SECURED';
             const isP2Secured = p2Score.status === 'SECURED';
             const isP1Early = p1Score.status === 'EARLY';
             const isP2Early = p2Score.status === 'EARLY';
-
             if (isP1Secured && isP2Secured) roundWinner = (p1Score.hp > p2Score.hp) ? 'p1' : 'p2';
             else if (isP1Secured && !isP2Secured) roundWinner = 'p1';
             else if (isP2Secured && !isP1Secured) roundWinner = 'p2';
@@ -789,17 +420,15 @@
             else if (isP1Early && p2Score.status === 'MISSED') roundWinner = 'p1';
             else if (isP2Early && p1Score.status === 'MISSED') roundWinner = 'p2';
             else roundWinner = (p1Score.hp > p2Score.hp) ? 'p1' : 'p2';
-
             if (roundWinner === 'p1') p1Wins++; else p2Wins++;
             updateTampilanDots();
-
             setTimeout(() => {
                 if (p1Wins === 3 || p2Wins === 3) {
                     selesaikanGame(p1Wins === 3 ? 'p1' : 'p2');
                 } else {
                     currentRound++;
                     if (myRole === 'p1' && supabaseB) {
-                        supabaseB.from('retri_rooms').update({ current_round: currentRound, p1_ready: false, p2_ready: false }).eq('id', currentRoomId).then();
+                        supabaseB.from('retri_rooms').update({ p1_ready: false, p2_ready: false }).eq('id', currentRoomId).then();
                     }
                     transisiLayar('view-arena', 'view-room', 'mundur');
                     document.getElementById('roomStatusText').innerText = 'Round Selesai. Bersiap untuk Round ' + currentRound;
@@ -808,36 +437,31 @@
                 }
             }, 2500);
         }
-
         function updateTampilanDots() {
             const up = (id, wins) => {
                 const dots = document.getElementById(id).children;
                 for(let i=0; i<3; i++) { 
-                    if(dots[i]) dots[i].className = 'dot ' + (i < wins ? 'dot-win' : ''); 
+                    if (dots[i]) dots[i].className = 'dot ' + (i < wins ? 'dot-win' : (i === wins && isPlaying ? '' : (i > wins ? '' : 'dot-lose'))); 
                 }
             };
             up('p1Dots', p1Wins); 
             up('p2Dots', p2Wins);
         }
-
         async function selesaikanGame(winnerRole) {
             const winnerName = winnerRole === 'p1' ? p1Name : p2Name;
             document.getElementById('resultWinnerText').innerText = 'Pemenang: ' + winnerName;
             document.getElementById('resultOverlay').style.display = 'flex';
-
             if (myRole === 'p1' && supabaseB) {
                 try {
                     await supabaseB.from('retri_rooms').update({ status: 'finished', winner_username: winnerName }).eq('id', currentRoomId);
                     const { data } = await supabaseB.from('retri_leaderboard').select('wins').eq('username', winnerName).single();
                     const newWins = data ? data.wins + 1 : 1;
                     await supabaseB.from('retri_leaderboard').upsert([{ username: winnerName, wins: newWins }]);
-                } catch(e) {
-                    console.error("Post-match update error:", e);
-                }
+                    setTimeout(async () => { await supabaseB.from('retri_rooms').delete().eq('id', currentRoomId); }, 10000);
+                } catch(e) {}
             }
             if (roomChannel && supabaseB) supabaseB.removeChannel(roomChannel);
         }
-
         function kembaliKeLobby() {
             document.getElementById('resultOverlay').style.display = 'none';
             currentRound = 1; 
@@ -846,29 +470,34 @@
             updateTampilanDots();
             tinggalkanRoom();
         }
-
-        // Leaderboard and initial setup
         async function ambilLeaderboard() {
             if (!supabaseB) return;
             try {
                 const { data, error } = await supabaseB.from('retri_leaderboard').select('*').order('wins', { ascending: false }).limit(5);
                 if (!error && data && data.length > 0) {
                     let html = '';
-                    data.forEach((r, i) => { 
-                        html += `<div class="leaderboard-item"><span>#${i+1} ${r.username}</span><span>${r.wins} Win</span></div>`; 
-                    });
+                    data.forEach((r, i) => { html += `<div class="leaderboard-item"><span>#${i+1} ${r.username}</span><span>${r.wins} Win</span></div>`; });
                     document.getElementById('leaderboardList').innerHTML = html;
                 } else {
                     document.getElementById('leaderboardList').innerHTML = '<div style="text-align:center; color:#555;">Belum ada juara</div>';
                 }
-            } catch (err) {
-                console.error("Leaderboard fetch error:", err);
-            }
+            } catch (err) {}
         }
-
         window.addEventListener('DOMContentLoaded', () => {
             document.getElementById('displayUsername').innerText = myUsername;
             ambilLeaderboard();
+            const lang = localStorage.getItem('lang') || 'id';
+            if (lang === 'en') {
+                document.getElementById('titleLang').innerText = 'RETRI CONTEST';
+                document.getElementById('btnBackToSush').innerText = 'Back to SushnHush';
+                document.getElementById('leaderboardTitle').innerText = 'LEADERBOARD';
+                document.getElementById('playingAsText').innerText = 'Playing as:';
+                document.getElementById('btnSiapMain').innerText = 'Ready, Play';
+                document.getElementById('btnBuatRoom').innerText = 'Create New Room';
+                document.getElementById('btnJoinRoom').innerText = 'Join Room';
+                document.getElementById('btnLeaveRoom').innerText = '← Leave';
+                document.getElementById('btnSalin').innerText = 'Copy ID';
+            }
         });
     </script>
 </body>
