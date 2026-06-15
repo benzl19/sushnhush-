@@ -271,49 +271,7 @@
         }
 
         function salinRoomId() { navigator.clipboard.writeText(currentRoomId); }
-
-        function subscribeKeRoom(roomId) {
-            if (!supabaseB) return;
-            roomChannel = supabaseB.channel('room_' + roomId)
-            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'retri_rooms', filter: 'id=eq.'+roomId }, (payload) => {
-                const newData = payload.new;
-                if (newData.p2_username && !p2Name) {
-                    p2Name = newData.p2_username;
-                    updateRoomUI();
-                }
-                if (newData.current_round > currentRound) {
-                    currentRound = newData.current_round;
-                    isEvaluating = false;
-                    transisiLayar('view-arena', 'view-room', 'mundur');
-                    document.getElementById('roomStatusText').innerText = 'Round Selesai. Bersiap untuk Round ' + currentRound;
-                    document.getElementById('btnReady').innerText = 'READY';
-                    document.getElementById('btnReady').disabled = false;
-                }
-                let statusText = "";
-                if (newData.p1_ready && newData.p2_ready && newData.current_round === currentRound) {
-                    if (isPlaying === false && isEvaluating === false) { mulaiSiklusRonde(); }
-                } else if (newData.p1_ready) {
-                    statusText = myRole === 'p1' ? "Menunggu lawan ready..." : "Lawan sudah siap!";
-                } else if (newData.p2_ready) {
-                    statusText = myRole === 'p2' ? "Menunggu lawan ready..." : "Lawan sudah siap!";
-                } else {
-                    statusText = "Lawan ditemukan! Tekan READY.";
-                }
-                if (p2Name && (!newData.p1_ready || !newData.p2_ready) && isPlaying === false) {
-                    document.getElementById('roomStatusText').innerText = statusText;
-                }
-                const p1Scores = newData.p1_scores || [];
-                const p2Scores = newData.p2_scores || [];
-                if (p1Scores.length === currentRound && p2Scores.length === currentRound && isPlaying && !isEvaluating) {
-                    isEvaluating = true;
-                    evaluasiPemenangRonde(p1Scores[currentRound-1], p2Scores[currentRound-1]);
-                }
-            })
-            .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'retri_rooms', filter: 'id=eq.'+roomId }, () => {
-                tinggalkanRoomLocally();
-            }).subscribe();
-        }
-                async function setReady() {
+        async function setReady() {
             if (!supabaseB) return;
             const btnReady = document.getElementById('btnReady');
             btnReady.disabled = true;
@@ -347,7 +305,8 @@
             const btnReady = document.getElementById('btnReady');
             btnReady.disabled = true;
             document.getElementById('roomStatusText').innerText = "Menunggu pemain bergabung...";
-            transisiLayar('view-room', 'view-lobby', 'mundur');
+            const activePanel = document.querySelector('.view-panel.active').id;
+            transisiLayar(activePanel, 'view-lobby', 'mundur');
         }
 
         window.addEventListener('beforeunload', () => {
@@ -381,7 +340,7 @@
             document.getElementById('retriLimitText').innerText = retriLimit;
             document.getElementById('hpBarFill').style.transform = 'scaleX(1)';
             const limitPercent = (retriLimit / maxHp) * 100;
-            document.getElementById('hpLimitMarker').style.left = (100 - limitPercent) + '%';
+            document.getElementById('hpLimitMarker').style.left = limitPercent + '%';
             document.getElementById('btnActionRetri').disabled = true;
             document.getElementById('btnActionRetri').innerText = 'RETRI';
             document.getElementById('monsterStatusText').style.display = 'none';
