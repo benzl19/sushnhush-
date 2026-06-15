@@ -16,7 +16,7 @@
         }
         body { margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-color); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; overflow: hidden; width: 100vw; height: 100dvh; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 420px; height: 100%; position: relative; background-color: var(--bg-color); overflow: hidden; }
-        .view-panel { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; background-color: var(--bg-color); transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease; transform: translateX(100%); opacity: 0; pointer-events: none; z-index: 1; }
+        .view-panel { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; flex-direction: column; padding: 20px; box-sizing: border-box; background-color: var(--bg-color); transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease; transform: translateX(100%); opacity: 0; pointer-events: none; z-index: 1; }
         .view-panel.active { transform: translateX(0); opacity: 1; pointer-events: auto; z-index: 2; }
         .view-panel.slide-left { transform: translateX(-100%); opacity: 0; pointer-events: none; z-index: 1; }
         h1 { margin: 0; text-align: center; color: #fff; text-shadow: 0 0 10px var(--neon-cyan); margin-bottom: 20px; font-weight: 600; }
@@ -42,7 +42,7 @@
         .monster-status { text-align: center; font-size: 18px; color: var(--neon-red); margin: 10px 0; font-weight: bold; display: none; }
         .health-bar-container { width: 100%; height: 40px; background: var(--dark-gray); border: 2px solid #555; border-radius: 20px; margin: 20px 0; position: relative; overflow: hidden; }
                 .health-bar-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #ff4a4a, #ff9e9e); transform-origin: left; }
-        .health-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; font-weight: bold; font-size: 18px; text-shadow: 1px 1px 2px #000; }
+        .health-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; font-weight: bold; font-size: 18px; text-shadow: 1px 1px 2px #000; z-index: 3; }
         .limit-marker { position: absolute; top: 0; height: 100%; width: 2px; background: var(--neon-green); box-shadow: 0 0 10px var(--neon-green); z-index: 2; }
         .btn-retri { height: 100px; font-size: 32px; border-radius: 20px; margin-top: auto; margin-bottom: 20px; }
         .countdown-text { text-align: center; font-size: 60px; color: var(--neon-cyan); font-weight: bold; margin: 20px 0; text-shadow: 0 0 20px var(--neon-cyan); display: none; }
@@ -51,7 +51,7 @@
 </head>
 <body>
     <div class="container">
-        <div id="view-main" class="view-panel active">
+        <div id="view-main" class="view-panel" style="display: flex;">
             <div class="top-nav">
                 <div style="font-weight:bold; color:var(--neon-cyan);" id="titleLang">RETRI CONTEST</div>
                 <button type="button" class="btn-small" onclick="window.location.href='beranda.html'" id="btnBackToSush">Kembali ke SushnHush</button>
@@ -81,7 +81,7 @@
                 <button type="button" class="btn-red" onclick="joinRoom()" id="btnJoinRoom">Join Room</button>
             </div>
         </div>
-        <div id="view-room" class="view-panel">
+                <div id="view-room" class="view-panel">
             <div class="top-nav">
                 <button type="button" class="btn-small" id="btnLeaveRoom" onclick="tinggalkanRoom()">← Keluar</button>
                 <div style="font-weight:bold; color:var(--neon-cyan);" id="displayRoomId">SH-0000</div>
@@ -104,7 +104,7 @@
                 <div style="font-size:12px; color:#555;" id="arenaRoundText">Round 1</div>
                 <div style="font-weight:bold; color:var(--neon-cyan);" id="arenaRoomId">SH-0000</div>
             </div>
-                        <div style="display:flex; justify-content:space-between; padding:0 20px;">
+            <div style="display:flex; justify-content:space-between; padding:0 20px;">
                 <div style="text-align:center;">
                     <div id="arenaP1Name" style="font-size:14px; font-weight:bold;">P1</div>
                     <div class="dots-container" id="p1Dots">
@@ -123,38 +123,28 @@
             <div class="monster-status" id="monsterStatusText">MUNCUL!</div>
             <div class="health-bar-container">
                 <div class="health-bar-fill" id="hpBarFill"></div>
-                <div class="limit-marker" id="hpLimitMarker" style="left: 10%;"></div>
+                <div class="limit-marker" id="hpLimitMarker"></div>
                 <div class="health-text"><span id="hpText">0</span> / <span id="hpMaxText">0</span></div>
             </div>
             <div style="text-align:center; font-size:14px; color:var(--neon-green); margin-bottom:20px;">
                 Batas Retri: <span id="retriLimitText">0</span>
             </div>
-            <button type="button" class="btn-retri btn-red" id="btnActionRetri" disabled onclick="eksekusiRetri(false)">RETRI</button>
+            <button type="button" class="btn-retri btn-red" id="btnActionRetri" disabled onclick="eksekusiRetri()">RETRI</button>
         </div>
         <div id="resultOverlay">
-            <h1 class="title-neon">MATCH SELESAI</h1>
+            <h1 style="color:var(--neon-cyan); margin-bottom:10px;">MATCH SELESAI</h1>
             <div style="font-size:24px; margin-bottom:30px; color:#fff;" id="resultWinnerText">Pemenang: -</div>
             <button type="button" onclick="kembaliKeLobby()">Kembali ke Lobby</button>
             <button type="button" onclick="window.location.href='beranda.html'" class="btn-red">Kembali ke SushnHush</button>
         </div>
     </div>
     <script>
-        function transisiLayar(idAsal, idTujuan, arah = 'maju') {
-            const layarAsal = document.getElementById(idAsal);
-            const layarTujuan = document.getElementById(idTujuan);
-            if (!layarAsal || !layarTujuan) return;
-            if (arah === 'maju') {
-                layarAsal.classList.remove('active');
-                layarAsal.classList.add('slide-left');
-                layarTujuan.classList.remove('slide-left');
-                layarTujuan.classList.add('active');
-            } else {
-                layarAsal.classList.remove('active');
-                layarTujuan.classList.remove('slide-left');
-                layarTujuan.classList.add('active');
-            }
-        }
+        const URL_B = 'https://znbyjoapajjonerfannn.supabase.co';
+        const KEY_B = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpuYnlqb2FwYWpqb25lcmZhbm5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExNjExNjcsImV4cCI6MjA5NjczNzE2N30.4bb1uzkdS-RFror69F9-bDB1nhDYRdKxZ8OL3F0b6MU';
         let supabaseB = null; 
+        try { if (window.supabase) supabaseB = window.supabase.createClient(URL_B, KEY_B); } catch (e) {}
+
+        const myUsername = localStorage.getItem('sush_curAlias') || 'Ninja_' + Math.floor(Math.random() * 1000);
         let roomChannel = null;
         let currentRoomId = null;
         let p1Name = '';
@@ -171,6 +161,8 @@
         let animStartTime = null;
         let animDuration = 0;
         let hasPressed = false;
+        let isEvaluating = false;
+
         const roundConfigs = {
             1: { type: 'TURTLE', hp: 15000, limit: 1700, minTime: 8000, maxTime: 9000 },
             2: { type: 'TURTLE', hp: 18000, limit: 2000, minTime: 7000, maxTime: 8000 },
@@ -178,17 +170,40 @@
             4: { type: 'LORD', hp: 22000, limit: 3000, minTime: 5000, maxTime: 6000 },
             5: { type: 'LORD EVOLVE', hp: 30000, limit: 3000, minTime: 4000, maxTime: 5000 }
         };
-        const myUsername = localStorage.getItem('sush_curAlias') || 'Ninja_' + Math.floor(Math.random() * 1000);
-        try {
-            if (window.supabase) {
-                const URL_B = 'https://znbyjoapajjonerfannn.supabase.co';
-                const KEY_B = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpuYnlqb2FwYWpqb25lcmZhbm5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExNjExNjcsImV4cCI6MjA5NjczNzE2N30.4bb1uzkdS-RFror69F9-bDB1nhDYRdKxZ8OL3F0b6MU';
-                supabaseB = window.supabase.createClient(URL_B, KEY_B);
+                function transisiLayar(idAsal, idTujuan, arah = 'maju') {
+            const layarAsal = document.getElementById(idAsal);
+            const layarTujuan = document.getElementById(idTujuan);
+            if (!layarAsal || !layarTujuan) return;
+            layarTujuan.style.display = 'flex';
+            if (arah === 'maju') {
+                layarAsal.classList.remove('active');
+                layarAsal.classList.add('slide-left');
+                layarTujuan.classList.remove('slide-left');
+                setTimeout(() => layarTujuan.classList.add('active'), 10);
+            } else {
+                layarAsal.classList.remove('active');
+                layarTujuan.classList.remove('slide-left');
+                setTimeout(() => layarTujuan.classList.add('active'), 10);
             }
-        } catch (e) {
-            console.error(e);
+            setTimeout(() => {
+                layarAsal.style.display = 'none';
+            }, 300);
         }
-        function generateRoomId() { return 'SH-' + Math.floor(1000 + Math.random() * 9000); }
+
+        function resetLocalGameState() {
+            p1Wins = 0;
+            p2Wins = 0;
+            currentRound = 1;
+            isPlaying = false;
+            hasPressed = false;
+            isEvaluating = false;
+            if (roomChannel && supabaseB) {
+                supabaseB.removeChannel(roomChannel);
+                roomChannel = null;
+            }
+            updateTampilanDots();
+        }
+
         function updateRoomUI() {
             document.getElementById('displayRoomId').innerText = currentRoomId;
             document.getElementById('p1NameRoom').innerText = p1Name || 'Pemain 1';
@@ -204,14 +219,22 @@
                 btnReady.disabled = true;
             }
         }
-                async function buatRoom() {
+
+        async function buatRoom() {
             if (!supabaseB) return;
             const btn = document.getElementById('btnBuatRoom'); 
             btn.disabled = true;
-            const newId = generateRoomId();
+            resetLocalGameState();
+            let newId;
+            let isUnique = false;
+            while (!isUnique) {
+                newId = 'SH-' + Math.floor(1000 + Math.random() * 9000);
+                const { data } = await supabaseB.from('retri_rooms').select('id').eq('id', newId).maybeSingle();
+                if (!data) isUnique = true;
+            }
             try {
                 const { error } = await supabaseB.from('retri_rooms').insert([
-                    { id: newId, p1_username: myUsername, status: 'waiting', p1_ready: false, p2_ready: false, p1_scores: [], p2_scores: [] }
+                    { id: newId, p1_username: myUsername, status: 'waiting', p1_ready: false, p2_ready: false, p1_scores: [], p2_scores: [], current_round: 1 }
                 ]);
                 if (error) throw error;
                 currentRoomId = newId; 
@@ -223,19 +246,19 @@
                 subscribeKeRoom(newId);
             } catch (err) { } finally { btn.disabled = false; }
         }
+
         async function joinRoom() {
             if (!supabaseB) return;
             const inputId = document.getElementById('inputRoomId').value.trim().toUpperCase();
             if (!inputId) return;
             const btn = document.getElementById('btnJoinRoom'); 
             btn.disabled = true;
+            resetLocalGameState();
             try {
-                const { data, error: fetchErr } = await supabaseB.from('retri_rooms').select('*').eq('id', inputId).single();
+                const { data, error: fetchErr } = await supabaseB.from('retri_rooms').select('p1_username, p2_username').eq('id', inputId).single();
                 if (fetchErr || !data) throw new Error();
-                if (data.p2_username) throw new Error();
-                const { error: updateErr } = await supabaseB.from('retri_rooms').update({ 
-                    p2_username: myUsername, status: 'full' 
-                }).eq('id', inputId);
+                if (data.p2_username !== null) throw new Error();
+                const { error: updateErr } = await supabaseB.from('retri_rooms').update({ p2_username: myUsername, status: 'full' }).eq('id', inputId).is('p2_username', null);
                 if (updateErr) throw updateErr;
                 currentRoomId = inputId; 
                 myRole = 'p2'; 
@@ -246,10 +269,11 @@
                 subscribeKeRoom(inputId);
             } catch (err) { } finally { btn.disabled = false; document.getElementById('inputRoomId').value = ''; }
         }
+
         function salinRoomId() { navigator.clipboard.writeText(currentRoomId); }
+
         function subscribeKeRoom(roomId) {
             if (!supabaseB) return;
-            if (roomChannel) supabaseB.removeChannel(roomChannel);
             roomChannel = supabaseB.channel('room_' + roomId)
             .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'retri_rooms', filter: 'id=eq.'+roomId }, (payload) => {
                 const newData = payload.new;
@@ -257,9 +281,17 @@
                     p2Name = newData.p2_username;
                     updateRoomUI();
                 }
+                if (newData.current_round > currentRound) {
+                    currentRound = newData.current_round;
+                    isEvaluating = false;
+                    transisiLayar('view-arena', 'view-room', 'mundur');
+                    document.getElementById('roomStatusText').innerText = 'Round Selesai. Bersiap untuk Round ' + currentRound;
+                    document.getElementById('btnReady').innerText = 'READY';
+                    document.getElementById('btnReady').disabled = false;
+                }
                 let statusText = "";
-                if (newData.p1_ready && newData.p2_ready) {
-                    if (isPlaying === false) { mulaiSiklusRonde(); }
+                if (newData.p1_ready && newData.p2_ready && newData.current_round === currentRound) {
+                    if (isPlaying === false && isEvaluating === false) { mulaiSiklusRonde(); }
                 } else if (newData.p1_ready) {
                     statusText = myRole === 'p1' ? "Menunggu lawan ready..." : "Lawan sudah siap!";
                 } else if (newData.p2_ready) {
@@ -267,10 +299,13 @@
                 } else {
                     statusText = "Lawan ditemukan! Tekan READY.";
                 }
-                if (p2Name && (!newData.p1_ready || !newData.p2_ready)) document.getElementById('roomStatusText').innerText = statusText;
+                if (p2Name && (!newData.p1_ready || !newData.p2_ready) && isPlaying === false) {
+                    document.getElementById('roomStatusText').innerText = statusText;
+                }
                 const p1Scores = newData.p1_scores || [];
                 const p2Scores = newData.p2_scores || [];
-                if (p1Scores.length === currentRound && p2Scores.length === currentRound && isPlaying) {
+                if (p1Scores.length === currentRound && p2Scores.length === currentRound && isPlaying && !isEvaluating) {
+                    isEvaluating = true;
                     evaluasiPemenangRonde(p1Scores[currentRound-1], p2Scores[currentRound-1]);
                 }
             })
@@ -278,13 +313,14 @@
                 tinggalkanRoomLocally();
             }).subscribe();
         }
-        async function setReady() {
+                async function setReady() {
             if (!supabaseB) return;
             const btnReady = document.getElementById('btnReady');
             btnReady.disabled = true;
             const updates = myRole === 'p1' ? { p1_ready: true } : { p2_ready: true };
             await supabaseB.from('retri_rooms').update(updates).eq('id', currentRoomId);
         }
+
         async function tinggalkanRoom() {
             if (!currentRoomId || !supabaseB) return;
             try {
@@ -298,28 +334,36 @@
                 }
             } catch (e) {} finally { tinggalkanRoomLocally(); }
         }
+
         function tinggalkanRoomLocally() {
             if (roomChannel && supabaseB) supabaseB.removeChannel(roomChannel);
+            roomChannel = null;
             currentRoomId = null;
             myRole = null;
             p1Name = '';
             p2Name = '';
             isPlaying = false;
+            isEvaluating = false;
             const btnReady = document.getElementById('btnReady');
             btnReady.disabled = true;
             document.getElementById('roomStatusText').innerText = "Menunggu pemain bergabung...";
             transisiLayar('view-room', 'view-lobby', 'mundur');
         }
+
         window.addEventListener('beforeunload', () => {
-            if (myRole === 'p1' && currentRoomId && !p2Name && supabaseB) {
-                supabaseB.from('retri_rooms').delete().eq('id', currentRoomId).then();
-            } else if (currentRoomId && supabaseB && myRole === 'p1') {
-                supabaseB.from('retri_rooms').delete().eq('id', currentRoomId).then();
+            if (currentRoomId && supabaseB) {
+                if (myRole === 'p1') {
+                    supabaseB.from('retri_rooms').delete().eq('id', currentRoomId).then();
+                } else if (myRole === 'p2') {
+                    supabaseB.from('retri_rooms').update({ p2_username: null, p2_ready: false, status: 'waiting' }).eq('id', currentRoomId).then();
+                }
             }
         });
+
         function mulaiSiklusRonde() {
             isPlaying = true;
             hasPressed = false;
+            isEvaluating = false;
             animStartTime = null;
             transisiLayar('view-room', 'view-arena', 'maju');
             document.getElementById('arenaRoomId').innerText = currentRoomId;
@@ -335,15 +379,16 @@
             document.getElementById('hpMaxText').innerText = maxHp;
             document.getElementById('hpText').innerText = maxHp;
             document.getElementById('retriLimitText').innerText = retriLimit;
-            document.getElementById('hpBarFill').style.width = '100%';
+            document.getElementById('hpBarFill').style.transform = 'scaleX(1)';
             const limitPercent = (retriLimit / maxHp) * 100;
-            document.getElementById('hpLimitMarker').style.left = limitPercent + '%';
+            document.getElementById('hpLimitMarker').style.left = (100 - limitPercent) + '%';
             document.getElementById('btnActionRetri').disabled = true;
             document.getElementById('btnActionRetri').innerText = 'RETRI';
             document.getElementById('monsterStatusText').style.display = 'none';
             jalankanHitungMundur(conf.type);
         }
-                function jalankanHitungMundur(monsterType) {
+
+        function jalankanHitungMundur(monsterType) {
             const cdDisplay = document.getElementById('countdownDisplay');
             const statusDisplay = document.getElementById('monsterStatusText');
             cdDisplay.style.display = 'block';
@@ -356,8 +401,7 @@
                 } else {
                     clearInterval(interval);
                     cdDisplay.style.display = 'none';
-                    const spawnText = monsterType === 'TURTLE' ? 'TURTLE TELAH MUNCUL!' : 'LORD EVOLVED TELAH BANGKIT!';
-                    statusDisplay.innerText = spawnText;
+                    statusDisplay.innerText = monsterType === 'TURTLE' ? 'TURTLE TELAH MUNCUL!' : 'LORD EVOLVED TELAH BANGKIT!';
                     statusDisplay.style.display = 'block';
                     document.getElementById('btnActionRetri').disabled = false;
                     setTimeout(() => {
@@ -367,6 +411,7 @@
                 }
             }, 1000);
         }
+
         function updateDarah(timestamp) {
             if (!isPlaying) return;
             if (!animStartTime) animStartTime = timestamp;
@@ -374,21 +419,22 @@
             currentHp = maxHp - (elapsed / animDuration) * maxHp;
             if (currentHp < 0) currentHp = 0;
             document.getElementById('hpText').innerText = Math.floor(currentHp);
-            document.getElementById('hpBarFill').style.width = ((currentHp / maxHp) * 100) + '%';
+            document.getElementById('hpBarFill').style.transform = `scaleX(${currentHp / maxHp})`;
             if (currentHp > 0) {
                 gameAnimFrame = requestAnimationFrame(updateDarah);
             } else {
                 if (!hasPressed) eksekusiRetri(true);
             }
         }
-        async function eksekusiRetri(missed = false) {
+                async function eksekusiRetri(missed = false) {
             hasPressed = true;
             document.getElementById('btnActionRetri').disabled = true;
-            let finalHp = missed ? 0 : Math.floor(currentHp);
-            let statusAction = finalHp <= retriLimit ? 'SECURED' : 'EARLY';
+            cancelAnimationFrame(gameAnimFrame);
+            const targetHp = missed ? 0 : Math.floor(currentHp);
+            let statusAction = targetHp <= retriLimit ? 'SECURED' : 'EARLY';
             if (missed) statusAction = 'MISSED';
             document.getElementById('btnActionRetri').innerText = statusAction;
-            const scoreData = { round: currentRound, hp: finalHp, status: statusAction, time: Date.now() };
+            const scoreData = { round: currentRound, hp: targetHp, status: statusAction, time: Date.now() };
             try {
                 const { data: room, error: errFetch } = await supabaseB.from('retri_rooms').select('p1_scores, p2_scores').eq('id', currentRoomId).single();
                 if (errFetch) throw errFetch;
@@ -405,6 +451,7 @@
                 await supabaseB.from('retri_rooms').update(updates).eq('id', currentRoomId);
             } catch(e) {}
         }
+
         function evaluasiPemenangRonde(p1Score, p2Score) {
             isPlaying = false; 
             cancelAnimationFrame(gameAnimFrame);
@@ -426,17 +473,13 @@
                 if (p1Wins === 3 || p2Wins === 3) {
                     selesaikanGame(p1Wins === 3 ? 'p1' : 'p2');
                 } else {
-                    currentRound++;
                     if (myRole === 'p1' && supabaseB) {
-                        supabaseB.from('retri_rooms').update({ p1_ready: false, p2_ready: false }).eq('id', currentRoomId).then();
+                        supabaseB.from('retri_rooms').update({ p1_ready: false, p2_ready: false, current_round: currentRound + 1 }).eq('id', currentRoomId).then();
                     }
-                    transisiLayar('view-arena', 'view-room', 'mundur');
-                    document.getElementById('roomStatusText').innerText = 'Round Selesai. Bersiap untuk Round ' + currentRound;
-                    document.getElementById('btnReady').innerText = 'READY';
-                    document.getElementById('btnReady').disabled = false;
                 }
             }, 2500);
         }
+
         function updateTampilanDots() {
             const up = (id, wins) => {
                 const dots = document.getElementById(id).children;
@@ -447,6 +490,7 @@
             up('p1Dots', p1Wins); 
             up('p2Dots', p2Wins);
         }
+
         async function selesaikanGame(winnerRole) {
             const winnerName = winnerRole === 'p1' ? p1Name : p2Name;
             document.getElementById('resultWinnerText').innerText = 'Pemenang: ' + winnerName;
@@ -454,22 +498,23 @@
             if (myRole === 'p1' && supabaseB) {
                 try {
                     await supabaseB.from('retri_rooms').update({ status: 'finished', winner_username: winnerName }).eq('id', currentRoomId);
-                    const { data } = await supabaseB.from('retri_leaderboard').select('wins').eq('username', winnerName).single();
+                    const { data } = await supabaseB.from('retri_leaderboard').select('wins').eq('username', winnerName).maybeSingle();
                     const newWins = data ? data.wins + 1 : 1;
                     await supabaseB.from('retri_leaderboard').upsert([{ username: winnerName, wins: newWins }]);
                     setTimeout(async () => { await supabaseB.from('retri_rooms').delete().eq('id', currentRoomId); }, 10000);
                 } catch(e) {}
             }
-            if (roomChannel && supabaseB) supabaseB.removeChannel(roomChannel);
+            if (roomChannel && supabaseB) {
+                supabaseB.removeChannel(roomChannel);
+                roomChannel = null;
+            }
         }
+
         function kembaliKeLobby() {
             document.getElementById('resultOverlay').style.display = 'none';
-            currentRound = 1; 
-            p1Wins = 0; 
-            p2Wins = 0; 
-            updateTampilanDots();
             tinggalkanRoom();
         }
+
         async function ambilLeaderboard() {
             if (!supabaseB) return;
             try {
@@ -483,6 +528,7 @@
                 }
             } catch (err) {}
         }
+
         window.addEventListener('DOMContentLoaded', () => {
             document.getElementById('displayUsername').innerText = myUsername;
             ambilLeaderboard();
